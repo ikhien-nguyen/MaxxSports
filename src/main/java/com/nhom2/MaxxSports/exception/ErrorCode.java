@@ -9,6 +9,8 @@ public enum ErrorCode {
     EMAIL_EXISTED(1001, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
     LOGIN_FAILED(1002, "Email hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED),
     UNAUTHENTICATED(1003, "Lỗi đăng nhập", HttpStatus.UNAUTHORIZED),
+    TOKEN_EXPIRED(1005, "Token đã hết hạn", HttpStatus.UNAUTHORIZED),
+    INVALID_TOKEN(1006, "Token không hợp lệ", HttpStatus.UNAUTHORIZED),
     ;
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
