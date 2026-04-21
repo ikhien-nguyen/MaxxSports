@@ -1,7 +1,6 @@
 package com.nhom2.MaxxSports.configuration;
 
-import com.nhom2.MaxxSports.service.AuthenticationService;
-import com.nimbusds.jose.JOSEException;
+import com.nhom2.MaxxSports.repository.InvalidatedTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -19,6 +18,9 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Value("${jwt.signerKey}")
     private String signerKey;
 
+    @Autowired
+    InvalidatedTokenRepository invalidatedTokenRepository;
+
     private NimbusJwtDecoder nimbusJwtDecoder = null;
 
     @Override
@@ -31,6 +33,13 @@ public class CustomJwtDecoder implements JwtDecoder {
                     .build();
         }
 
-        return nimbusJwtDecoder.decode(token);
+        Jwt jwt = nimbusJwtDecoder.decode(token);
+
+        String jti = jwt.getId();
+
+        if (invalidatedTokenRepository.existsById(jti)) {
+            throw new JwtException("Token revoked");
+        }
+        return jwt;
     }
 }

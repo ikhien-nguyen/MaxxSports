@@ -1,13 +1,17 @@
 package com.nhom2.MaxxSports.service;
 
+import com.nhom2.MaxxSports.dto.request.ChangePasswordRequest;
 import com.nhom2.MaxxSports.dto.request.LoginRequest;
 import com.nhom2.MaxxSports.dto.request.RegisterRequest;
+import com.nhom2.MaxxSports.dto.response.ChangePasswordResponse;
 import com.nhom2.MaxxSports.dto.response.LoginResponse;
 import com.nhom2.MaxxSports.dto.response.RegisterResponse;
+import com.nhom2.MaxxSports.entity.InvalidatedToken;
 import com.nhom2.MaxxSports.entity.User;
 import com.nhom2.MaxxSports.exception.AppException;
 import com.nhom2.MaxxSports.exception.ErrorCode;
 import com.nhom2.MaxxSports.mapper.UserMapper;
+import com.nhom2.MaxxSports.repository.InvalidatedTokenRepository;
 import com.nhom2.MaxxSports.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -21,6 +25,7 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +43,7 @@ public class AuthenticationService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -61,6 +67,7 @@ public class AuthenticationService {
         }
         return userMapper.toRegisterResponse(user);
     }
+
     public LoginResponse login(LoginRequest loginRequest) {
         var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()->new AppException(ErrorCode.LOGIN_FAILED));
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
@@ -71,6 +78,43 @@ public class AuthenticationService {
                 .checked(true)
                 .token(token)
                 .build();
+    }
+
+    public void logout(String token) throws ParseException, JOSEException {
+        try {
+            var signToken = verifyToken(token, true);
+
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidatedToken invalidatedToken =
+                    InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+
+            invalidatedTokenRepository.save(invalidatedToken);
+            log.info("Logout successful");
+        } catch (AppException exception) {
+            log.info("Token already expired");
+        }
+    }
+
+    public ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest) {
+        String email=SecurityContextHolder.getContext().getAuthentication().getName();
+        User user= userRepository.findByEmail(email).orElseThrow(()->new AppException(ErrorCode.LOGIN_FAILED));
+        boolean check = passwordEncoder.matches(changePasswordRequest.getOldPassword(), user.getPassword());
+        ChangePasswordResponse changePasswordResponse;
+        if (!check) {
+            changePasswordResponse = ChangePasswordResponse.builder()
+                    .message("Mật khẩu cũ không đúng")
+                    .build();
+        }else{
+            user.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
+            userRepository.save(user);
+            changePasswordResponse = ChangePasswordResponse.builder()
+                    .message("Đổi mật khẩu thành công")
+                    .build();
+        }
+
+        return changePasswordResponse;
     }
 
     private String generateToken(User user) {
@@ -98,6 +142,7 @@ public class AuthenticationService {
             throw new RuntimeException(e);
         }
     }
+
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
