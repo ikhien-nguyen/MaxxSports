@@ -1,3 +1,19 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /xsports
+
 spring:
-  application:
-    name: MaxxSports
+  datasource:
+    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/xsports}
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+    password: ${DBMS_PASSWORD:123456}
+    username: ${DBMS_USERNAME:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+jwt:
+  signerKey: "_ftgRSsFLkBSA49hhlmZDxAEjXnNMOjfQY18zapMpZyLAc5PTDZu2QSgjMktYpqBe"
+  valid-duration: 10
+  refreshable-duration: 24
