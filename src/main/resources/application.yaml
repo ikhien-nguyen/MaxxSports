@@ -17,3 +17,7 @@ jwt:
   signerKey: "_ftgRSsFLkBSA49hhlmZDxAEjXnNMOjfQY18zapMpZyLAc5PTDZu2QSgjMktYpqBe"
   valid-duration: 10
   refreshable-duration: 24
+cloudinary:
+  cloud-name: "dlw2xyay8"
+  api-key: "476555591589246"
+  api-secret: "CLjF43GAPvQgE-E8nLm9f4tN0lQ"
