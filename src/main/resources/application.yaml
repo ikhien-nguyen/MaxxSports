@@ -18,3 +18,6 @@ jwt:
   signerKey: "_ftgRSsFLkBSA49hhlmZDxAEjXnNMOjfQY18zapMpZyLAc5PTDZu2QSgjMktYpqBe"
   valid-duration: 10
   refreshable-duration: 24
+ 
+file:
+  upload-dir: uploads
