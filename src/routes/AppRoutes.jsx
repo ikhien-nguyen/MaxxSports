@@ -4,6 +4,7 @@ import Product from '../pages/Product/Product';
 import Cart from '../pages/Cart/Cart';
 import Payment from '../pages/Payment/Payment';
 import PaymentManagement from '../pages/PaymentManagement/PaymentManagement';
+import Auth from '../pages/Auth/Auth';
 import NotFound from '../pages/NotFound';
 import MainLayout from '../components/layout/MainLayout';
 
@@ -13,6 +14,7 @@ export default function AppRoutes() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/payment" element={<Payment />} />
@@ -23,3 +25,4 @@ export default function AppRoutes() {
     </Router>
   );
 }
+

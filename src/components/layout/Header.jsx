@@ -168,10 +168,10 @@ export default function Header() {
             </span>
           </div>
 
-          {/* User */}
-          <button className="icon-btn" title="Tài khoản" aria-label="Tài khoản">
+          {/* User — direct link to Auth page */}
+          <a href="/auth" className="icon-btn user-icon-link" title="Tài khoản" aria-label="Tài khoản">
             <UserIcon />
-          </button>
+          </a>
 
           {/* Cart */}
           <button

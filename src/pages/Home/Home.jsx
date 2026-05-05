@@ -15,7 +15,7 @@ import {
 } from '../../data/homeData'
 
 /* ─────────────────────────────────────────────
-   SHARED: Inline SVG Icons
+   INLINE SVG ICONS
 ───────────────────────────────────────────── */
 const ChevronLeft = () => (
   <svg width="10" height="18" viewBox="0 0 10 18" fill="none" aria-hidden="true">
@@ -35,58 +35,108 @@ const ArrowRight = () => (
   </svg>
 )
 
+const CartIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M16 10C16 11.0609 15.5786 12.0783 14.8284 12.8284C14.0783 13.5786 13.0609 14 12 14C10.9391 14 9.92172 13.5786 9.17157 12.8284C8.42143 12.0783 8 11.0609 8 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const BoltIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 /* ─────────────────────────────────────────────
-   SHARED: Product Card (New Arrivals / Trending)
+   PRODUCT CARD — Dual Actions (New Arrivals / Trending)
 ───────────────────────────────────────────── */
 function ProductCard({ brand, name, price, image, dotColor, href }) {
   return (
-    <a className="product-card" href={href} aria-label={`${brand} — ${name}`}>
-      <div className="product-card__img-wrap">
-        <img src={image} alt={name} className="product-card__img" loading="lazy" />
+    <div className="product-card">
+      <a className="product-card__link" href={href || '#redirect'} aria-label={`${brand} — ${name}`}>
+        <div className="product-card__img-wrap">
+          <img src={image} alt={name} className="product-card__img" loading="lazy" />
+        </div>
+        <div className="product-card__info">
+          <span className="product-card__brand">{brand}</span>
+          <p className="product-card__name">{name}</p>
+          <p className="product-card__price">{price}</p>
+          <span
+            className="product-card__dot"
+            style={{ backgroundColor: dotColor }}
+            aria-label={`Màu sắc: ${dotColor}`}
+          />
+        </div>
+      </a>
+      <div className="action-buttons">
+        <button
+          className="action-btn action-btn--ghost"
+          onClick={(e) => { e.preventDefault(); alert('Đã thêm sản phẩm ' + name + ' vào giỏ hàng!'); }}
+          aria-label={`Thêm ${name} vào giỏ hàng`}
+        >
+          <CartIcon /> Thêm vào giỏ
+        </button>
+        <button
+          className="action-btn action-btn--primary"
+          onClick={(e) => { e.preventDefault(); alert('Chuyển hướng đến trang Thanh toán cho ' + name); }}
+          aria-label={`Mua ngay ${name}`}
+        >
+          <BoltIcon /> Mua ngay
+        </button>
       </div>
-      <div className="product-card__info">
-        <span className="product-card__brand">{brand}</span>
-        <p className="product-card__name">{name}</p>
-        <p className="product-card__price">{price}</p>
-        <span
-          className="product-card__dot"
-          style={{ backgroundColor: dotColor }}
-          aria-label={`Màu sắc: ${dotColor}`}
-        />
-      </div>
-    </a>
+    </div>
   )
 }
 
 /* ─────────────────────────────────────────────
-   SHARED: Sale Product Card (BatMood section)
+   SALE PRODUCT CARD — Dual Actions (BatMood section)
 ───────────────────────────────────────────── */
 function SaleProductCard({ brand, name, currentPrice, originalPrice, discount, image, dotColor, href }) {
   return (
-    <a className="product-card product-card--sale" href={href} aria-label={`${brand} — ${name}`}>
-      <div className="product-card__img-wrap">
-        <img src={image} alt={name} className="product-card__img" loading="lazy" />
-      </div>
-      <div className="product-card__info">
-        <span className="product-card__brand">{brand}</span>
-        <p className="product-card__name">{name}</p>
-        <div className="product-card__price-row">
-          <span className="product-card__price">{currentPrice}</span>
-          <span className="product-card__original-price">{originalPrice}</span>
-          <span className="product-card__discount-badge">{discount}</span>
+    <div className="product-card product-card--sale">
+      <a className="product-card__link" href={href || '#redirect'} aria-label={`${brand} — ${name}`}>
+        <div className="product-card__img-wrap">
+          <img src={image} alt={name} className="product-card__img" loading="lazy" />
+          {discount && <span className="product-card__discount-badge">{discount}</span>}
         </div>
-        <span
-          className="product-card__dot"
-          style={{ backgroundColor: dotColor }}
-          aria-label={`Màu sắc: ${dotColor}`}
-        />
+        <div className="product-card__info">
+          <span className="product-card__brand">{brand}</span>
+          <p className="product-card__name">{name}</p>
+          <div className="product-card__price-row">
+            <span className="product-card__price">{currentPrice}</span>
+            <span className="product-card__original-price">{originalPrice}</span>
+          </div>
+          <span
+            className="product-card__dot"
+            style={{ backgroundColor: dotColor }}
+            aria-label={`Màu sắc: ${dotColor}`}
+          />
+        </div>
+      </a>
+      <div className="action-buttons">
+        <button
+          className="action-btn action-btn--ghost"
+          onClick={(e) => { e.preventDefault(); alert('Đã thêm sản phẩm ' + name + ' vào giỏ hàng!'); }}
+          aria-label={`Thêm ${name} vào giỏ hàng`}
+        >
+          <CartIcon /> Thêm vào giỏ
+        </button>
+        <button
+          className="action-btn action-btn--primary"
+          onClick={(e) => { e.preventDefault(); alert('Chuyển hướng đến trang Thanh toán cho ' + name); }}
+          aria-label={`Mua ngay ${name}`}
+        >
+          <BoltIcon /> Mua ngay
+        </button>
       </div>
-    </a>
+    </div>
   )
 }
 
 /* ─────────────────────────────────────────────
-   SHARED: View All Button
+   View All Button
 ───────────────────────────────────────────── */
 function ViewAllBtn({ href, label = 'Xem tất cả' }) {
   return (
@@ -99,7 +149,7 @@ function ViewAllBtn({ href, label = 'Xem tất cả' }) {
 }
 
 /* ─────────────────────────────────────────────
-   SHARED: Section Tabs
+   Section Tabs
 ───────────────────────────────────────────── */
 function SectionTabs({ tabs, activeTab, onTabChange }) {
   return (
@@ -123,13 +173,13 @@ function SectionTabs({ tabs, activeTab, onTabChange }) {
    HERO SLIDER
 ───────────────────────────────────────────── */
 function HeroSlider() {
-  const [current, setCurrent] = useState(0)
+  const [currentSlide, setCurrentSlide] = useState(0)
   const total = heroSlides.length
 
-  const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), [total])
-  const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total])
+  const prev = useCallback(() => setCurrentSlide((c) => (c - 1 + total) % total), [total])
+  const next = useCallback(() => setCurrentSlide((c) => (c + 1) % total), [total])
 
-  // Auto-advance
+  // Auto-advance every 4.5s
   useEffect(() => {
     if (total <= 1) return
     const timer = setInterval(next, 4500)
@@ -140,10 +190,10 @@ function HeroSlider() {
     <section className="hero-slider" aria-label="Khuyến mãi nổi bật">
       <div
         className="hero-slider__track"
-        style={{ transform: `translateX(-${current * 100}%)` }}
+        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
         {heroSlides.map((slide) => (
-          <a key={slide.id} href={slide.href} className="hero-slider__slide">
+          <a key={slide.id} href={slide.href || '#redirect'} className="hero-slider__slide">
             <img src={slide.image} alt={slide.alt} className="hero-slider__img" />
           </a>
         ))}
@@ -170,10 +220,10 @@ function HeroSlider() {
               <button
                 key={i}
                 role="tab"
-                aria-selected={i === current}
+                aria-selected={i === currentSlide}
                 aria-label={`Slide ${i + 1}`}
-                className={`hero-slider__dot${i === current ? ' hero-slider__dot--active' : ''}`}
-                onClick={() => setCurrent(i)}
+                className={`hero-slider__dot${i === currentSlide ? ' hero-slider__dot--active' : ''}`}
+                onClick={() => setCurrentSlide(i)}
               />
             ))}
           </div>
@@ -191,7 +241,7 @@ function LookbookBanners() {
     <section className="lookbooks" aria-label="Bộ sưu tập nổi bật">
       <div className="lookbooks__inner">
         {lookbookBanners.map((banner) => (
-          <a key={banner.id} href={banner.href} className="lookbooks__link">
+          <a key={banner.id} href={banner.href || '#redirect'} className="lookbooks__link">
             <img
               src={banner.image}
               alt={banner.alt}
@@ -235,7 +285,7 @@ function NewArrivals() {
         </div>
 
         {products.length > 0 && (
-          <ViewAllBtn href={activeTabData?.href || '#'} />
+          <ViewAllBtn href={activeTabData?.href || '#redirect'} />
         )}
       </div>
     </section>
@@ -295,7 +345,7 @@ function BatMoodSection() {
           </div>
 
           {products.length > 0 && (
-            <ViewAllBtn href={activeTabData?.href || '#'} />
+            <ViewAllBtn href={activeTabData?.href || '#redirect'} />
           )}
         </div>
       </div>
@@ -312,7 +362,7 @@ function SportCategories() {
       <div className="section-container">
         <div className="sport-cats__grid">
           {sportCategories.map((cat) => (
-            <a key={cat.id} href={cat.href} className="sport-cat" aria-label={cat.name}>
+            <a key={cat.id} href={cat.href || '#redirect'} className="sport-cat" aria-label={cat.name}>
               <img
                 src={cat.image}
                 alt={cat.name}
@@ -363,7 +413,7 @@ function TrendingSection() {
         </div>
 
         {products.length > 0 && (
-          <ViewAllBtn href={activeTabData?.href || '#'} />
+          <ViewAllBtn href={activeTabData?.href || '#redirect'} />
         )}
       </div>
     </section>
@@ -397,7 +447,7 @@ function StoreNearby() {
 ───────────────────────────────────────────── */
 function ArticleItem({ post }) {
   return (
-    <a href={post.href} className="article-item">
+    <a href={post.href || '#redirect'} className="article-item">
       <img
         src={post.image}
         alt={post.title}

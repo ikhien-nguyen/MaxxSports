@@ -2,14 +2,20 @@
    HEADER — strict 3-zone flex architecture
    =========================================================== */
 
-/* ── Outer wrapper ───────────────────────────────────────── */
+/* ── Outer wrapper — FULL-WIDTH BG ───────────────────────── */
 .header-outer {
   width: 100%;
+  min-width: 100vw;
   background: var(--bg-dark);
   position: sticky;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: var(--z-sticky);
   border-bottom: 1px solid var(--border-dark);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* ── Inner container: exact 3-zone flex row ──────────────── */
@@ -240,6 +246,12 @@
 
 .icon-btn:hover svg {
   stroke: var(--brand-yellow);
+}
+
+/* ── User icon link ──────────────────────────────────────── */
+.user-icon-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Cart badge */
