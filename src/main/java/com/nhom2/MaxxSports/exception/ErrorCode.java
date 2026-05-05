@@ -11,6 +11,7 @@ public enum ErrorCode {
     UNAUTHENTICATED(1003, "Lỗi đăng nhập", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED(1005, "Token đã hết hạn", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(1006, "Token không hợp lệ", HttpStatus.UNAUTHORIZED),
+    USER_NOT_FOUND(1007,"Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     ;
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

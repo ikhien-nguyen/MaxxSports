@@ -21,3 +21,7 @@ jwt:
  
 file:
   upload-dir: uploads
+cloudinary:
+  cloud-name: "dlw2xyay8"
+  api-key: "476555591589246"
+  api-secret: "CLjF43GAPvQgE-E8nLm9f4tN0lQ"
