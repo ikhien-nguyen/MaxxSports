@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Header.css';
 
 /* ── Nav data ──────────────────────────────────────────────── */
@@ -89,7 +89,27 @@ const CaretDown = () => (
 /* ── Component ──────────────────────────────────────────────── */
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const cartCount = 3;
+  const [cartCount, setCartCount] = useState(0);
+
+  /* ── Real-time cart badge sync ──────────────────────────────── */
+  useEffect(() => {
+    const updateBadge = () => {
+      try {
+        const cart = JSON.parse(localStorage.getItem('maxxsport_cart') || '[]');
+        const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        setCartCount(totalQty);
+      } catch {
+        setCartCount(0);
+      }
+    };
+    updateBadge();
+    window.addEventListener('cartUpdated', updateBadge);
+    window.addEventListener('storage', updateBadge);
+    return () => {
+      window.removeEventListener('cartUpdated', updateBadge);
+      window.removeEventListener('storage', updateBadge);
+    };
+  }, []);
 
   return (
     <header className="header-outer">
@@ -172,8 +192,9 @@ export default function Header() {
             <UserIcon />
           </a>
 
-          {/* Cart */}
-          <button
+          {/* Cart — links to /cart */}
+          <a
+            href="/cart"
             className="icon-btn cart-btn"
             title="Giỏ hàng"
             aria-label={`Giỏ hàng — ${cartCount} sản phẩm`}
@@ -182,7 +203,7 @@ export default function Header() {
             {cartCount > 0 && (
               <span className="cart-badge" aria-hidden="true">{cartCount}</span>
             )}
-          </button>
+          </a>
 
           {/* Hamburger — mobile only */}
           <button

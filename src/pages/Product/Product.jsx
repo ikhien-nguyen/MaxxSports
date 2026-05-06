@@ -257,6 +257,7 @@ export default function Product() {
       'maxxsport_cart',
       JSON.stringify([...existingCart, cartItem])
     );
+    window.dispatchEvent(new Event('cartUpdated'));
 
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);

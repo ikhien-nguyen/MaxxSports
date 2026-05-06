@@ -84,9 +84,10 @@ export default function Cart() {
     }
   }, []);
 
-  /* ── Persist cart to localStorage on every change ─────────── */
+  /* ── Persist cart to localStorage + fire global event ──────── */
   const syncToStorage = useCallback((items) => {
     localStorage.setItem('maxxsport_cart', JSON.stringify(items));
+    window.dispatchEvent(new Event('cartUpdated'));
   }, []);
 
   /* ── Unique key for each cart item ───────────────────────── */
@@ -160,9 +161,9 @@ export default function Cart() {
               Bạn chưa thêm sản phẩm nào vào giỏ hàng.
               <br />Khám phá các sản phẩm mới nhất ngay!
             </p>
-            <Link to="/new-arrivals" className="cart-empty__btn">
+            <a href="/new-arrivals" className="btn-continue cart-empty__btn">
               Tiếp tục mua sắm
-            </Link>
+            </a>
           </div>
         </div>
       </div>
@@ -207,8 +208,8 @@ export default function Cart() {
                 <div className="cart-item" key={key}>
                   {/* Product info */}
                   <div className="cart-item__product">
-                    <Link
-                      to={`/product/${item.id}`}
+                    <a
+                      href={"/product/" + item.id}
                       className="cart-item__img-link"
                       aria-label={`Xem ${item.name}`}
                     >
@@ -218,11 +219,11 @@ export default function Cart() {
                         className="cart-item__img"
                         loading="lazy"
                       />
-                    </Link>
+                    </a>
                     <div className="cart-item__details">
-                      <Link to={`/product/${item.id}`} className="cart-item__name">
+                      <a href={"/product/" + item.id} className="cart-item__name">
                         {item.name}
-                      </Link>
+                      </a>
                       {item.brand && (
                         <span className="cart-item__brand">{item.brand}</span>
                       )}
@@ -301,9 +302,9 @@ export default function Cart() {
 
             {/* Bottom actions */}
             <div className="cart-items__footer">
-              <Link to="/new-arrivals" className="cart-footer__continue">
+              <a href="/new-arrivals" className="cart-footer__continue">
                 ← Tiếp tục mua sắm
-              </Link>
+              </a>
               <button
                 type="button"
                 className="cart-footer__clear"
@@ -370,9 +371,9 @@ export default function Cart() {
               </div>
 
               {/* Checkout button */}
-              <Link to="/payment" className="cart-summary__checkout" id="checkout-btn">
+              <a href="/checkout" className="btn-checkout cart-summary__checkout" id="checkout-btn">
                 TIẾN HÀNH THANH TOÁN
-              </Link>
+              </a>
 
               {/* Trust badges */}
               <div className="cart-summary__trust">

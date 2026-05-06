@@ -257,6 +257,7 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
       'maxxsport_cart',
       JSON.stringify([...existingCart, product])
     );
+    window.dispatchEvent(new Event('cartUpdated'));
     alert('Đã thêm ' + product.name + ' vào giỏ hàng!');
   };
 

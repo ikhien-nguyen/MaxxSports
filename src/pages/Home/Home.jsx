@@ -70,6 +70,7 @@ function ProductCard({ id, brand, name, price, image, dotColor }) {
     }
     const existing = JSON.parse(localStorage.getItem('maxxsport_cart') || '[]')
     localStorage.setItem('maxxsport_cart', JSON.stringify([...existing, cartItem]))
+    window.dispatchEvent(new Event('cartUpdated'))
     alert(`Đã thêm "${name}" vào giỏ hàng!`)
   }
 
@@ -130,6 +131,7 @@ function SaleProductCard({ id, brand, name, currentPrice, originalPrice, discoun
     }
     const existing = JSON.parse(localStorage.getItem('maxxsport_cart') || '[]')
     localStorage.setItem('maxxsport_cart', JSON.stringify([...existing, cartItem]))
+    window.dispatchEvent(new Event('cartUpdated'))
     alert(`Đã thêm "${name}" vào giỏ hàng!`)
   }
 
