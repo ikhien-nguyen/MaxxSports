@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { formatPrice } from '../../data/productDetailData';
 import './Success.css';
 
 /* ── Inline SVG Icons ──────────────────────────────────────── */
@@ -39,16 +40,46 @@ const MailOpenIcon = () => (
   </svg>
 );
 
+const OrderIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+    <polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
+
+const MapPinIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+const CreditCardIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
+  </svg>
+);
+
 /* ── SUCCESS PAGE COMPONENT ────────────────────────────────── */
 export default function Success() {
-  const [orderNumber] = useState(() =>
-    'MXS' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase()
-  );
+  /* ── Read last order from localStorage ── */
+  const [order] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('maxxsport_last_order')) || null;
+    } catch { return null; }
+  });
 
-  /* ── On mount: clear cart + dispatch cartUpdated event ── */
+  /* ── Fallback order number if no real order ── */
+  const orderNumber = order?.id || ('MXS' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase());
+
+  /* ── On mount: ensure cart is clear + dispatch events ── */
   useEffect(() => {
-    localStorage.removeItem('maxxsport_cart');
+    localStorage.setItem('maxxsport_cart', '[]');
     window.dispatchEvent(new Event('cartUpdated'));
+    window.dispatchEvent(new Event('systemDataUpdated'));
   }, []);
 
   return (
@@ -82,14 +113,47 @@ export default function Success() {
               <span className="success-order-label">Trạng thái</span>
               <span className="success-order-status">
                 <span className="success-status-dot" />
-                Đang xử lý
+                {order?.status || 'Đang xử lý'}
               </span>
             </div>
+            {order?.total && (
+              <div className="success-order-row">
+                <span className="success-order-label">Tổng thanh toán</span>
+                <span className="success-order-value" style={{ color: '#df0000', fontWeight: 800 }}>
+                  {formatPrice(order.total)}
+                </span>
+              </div>
+            )}
+            {order?.payment && (
+              <div className="success-order-row">
+                <span className="success-order-label"><CreditCardIcon /> Thanh toán</span>
+                <span className="success-order-value">{order.payment}</span>
+              </div>
+            )}
+            {order?.shipping?.address && (
+              <div className="success-order-row">
+                <span className="success-order-label"><MapPinIcon /> Giao đến</span>
+                <span className="success-order-value" style={{ maxWidth: 280, textAlign: 'right' }}>{order.shipping.address}</span>
+              </div>
+            )}
             <div className="success-order-row">
               <span className="success-order-label">Thời gian dự kiến</span>
               <span className="success-order-value">2-5 ngày làm việc</span>
             </div>
           </div>
+
+          {/* ── Order items mini list ── */}
+          {order?.items && order.items.length > 0 && (
+            <div className="success-items-summary" id="success-items-list">
+              <h4 className="success-items-title"><OrderIcon /> Sản phẩm đã đặt</h4>
+              {order.items.map((item, i) => (
+                <div className="success-item-row" key={i}>
+                  <span className="success-item-name">{item.name}</span>
+                  <span className="success-item-meta">x{item.qty} — {formatPrice(item.price)}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* ── Email notice ── */}
           <div className="success-notice">
@@ -106,9 +170,9 @@ export default function Success() {
               <HomeIcon />
               Về trang chủ
             </Link>
-            <Link to="/new-arrivals" className="success-btn success-btn--secondary" id="success-shop-btn">
-              <ShoppingBagIcon />
-              Tiếp tục mua sắm
+            <Link to="/account" className="success-btn success-btn--secondary" id="success-orders-btn">
+              <OrderIcon />
+              Xem đơn hàng
             </Link>
           </div>
 

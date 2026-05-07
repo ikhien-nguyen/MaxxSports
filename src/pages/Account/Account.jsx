@@ -155,8 +155,8 @@ const TrophyIcon = () => (
 );
 const TIMELINE_ICONS = [GiftIcon, HandshakeIcon, TruckMiniIcon, TrophyIcon];
 
-/* ── Mock Orders ───────────────────────────────────────────── */
-const MOCK_ORDERS = [
+/* ── Seed Orders (shown on first visit, merged with real orders) ── */
+const SEED_ORDERS = [
   {
     id: '#MS20260501',
     date: '01/05/2026',
@@ -196,6 +196,21 @@ const MOCK_ORDERS = [
     status: 'Chờ xác nhận',
   },
 ];
+
+/* ── Helper: merge seed + localStorage orders, deduplicate by id ── */
+function loadOrders() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('maxxsport_orders') || '[]');
+    const merged = [...stored];
+    const ids = new Set(stored.map(o => o.id));
+    for (const seed of SEED_ORDERS) {
+      if (!ids.has(seed.id)) merged.push(seed);
+    }
+    return merged;
+  } catch {
+    return [...SEED_ORDERS];
+  }
+}
 
 const STATUS_CONFIG = {
   'Chờ xác nhận': { color: '#888888', bg: '#f5f5f5', step: 0 },
@@ -240,6 +255,20 @@ export default function Account() {
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState({ type: '', text: '' });
   const [showPw, setShowPw] = useState({ current: false, newPw: false, confirm: false });
+
+  /* ── Orders state (dynamic from localStorage) ── */
+  const [orders, setOrders] = useState(loadOrders);
+
+  /* ── Listen for systemDataUpdated to refresh orders in real-time ── */
+  useEffect(() => {
+    const refresh = () => setOrders(loadOrders());
+    window.addEventListener('systemDataUpdated', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('systemDataUpdated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
 
   /* ── Address Book state ── */
   const ADDR_KEY = `maxxsport_addresses_${user.email || 'guest'}`;
@@ -498,10 +527,10 @@ export default function Account() {
               <section className="acc-section" id="acc-orders-section">
                 <div className="acc-section__header">
                   <h2 className="acc-section__title">Đơn hàng của tôi</h2>
-                  <span className="acc-section__count">{MOCK_ORDERS.length} đơn hàng</span>
+                  <span className="acc-section__count">{orders.length} đơn hàng</span>
                 </div>
 
-                {MOCK_ORDERS.length === 0 ? (
+                {orders.length === 0 ? (
                   <div className="acc-empty">
                     <ShoppingBagIcon />
                     <h3>Bạn chưa có đơn hàng nào</h3>
@@ -510,7 +539,7 @@ export default function Account() {
                   </div>
                 ) : (
                   <div className="acc-orders-list">
-                    {MOCK_ORDERS.map((order) => {
+                    {orders.map((order) => {
                       const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG['Chờ xác nhận'];
                       const currentStep = cfg.step;
                       return (

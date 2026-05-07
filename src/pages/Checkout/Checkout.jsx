@@ -74,6 +74,25 @@ function parseNumericPrice(price) {
   return 0;
 }
 
+/* ── Helper: generate order ID ─────────────────────────────── */
+function generateOrderID() {
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  const suffix = Math.random().toString(36).slice(2, 5).toUpperCase();
+  return `#MS${y}${m}${d}${suffix}`;
+}
+
+/* ── Inline SVG: Address Book Icon ─────────────────────────── */
+const BookOpenIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+    <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+  </svg>
+);
+
 /* ── CHECKOUT PAGE COMPONENT ───────────────────────────────── */
 export default function Checkout() {
   /* ── Auth guard ── */
@@ -98,17 +117,54 @@ export default function Checkout() {
     } catch { return []; }
   });
 
-  /* ── Shipping form state (pre-filled from user) ── */
-  const [form, setForm] = useState({
-    name: user.name || '',
-    email: user.email || '',
-    phone: '',
-    address: '',
-    city: '',
-    district: '',
-    ward: '',
-    note: '',
+  /* ── Load saved addresses from address book ── */
+  const [savedAddresses] = useState(() => {
+    try {
+      const key = `maxxsport_addresses_${user.email || 'guest'}`;
+      return JSON.parse(localStorage.getItem(key)) || [];
+    } catch { return []; }
   });
+
+  /* ── Smart auto-fill: default address → user profile fallback ── */
+  const [form, setForm] = useState(() => {
+    const defaultAddr = savedAddresses.find(a => a.isDefault) || savedAddresses[0];
+    if (defaultAddr) {
+      return {
+        name: defaultAddr.name || user.name || '',
+        email: user.email || '',
+        phone: defaultAddr.phone || user.phone || '',
+        address: defaultAddr.street || '',
+        city: defaultAddr.city || '',
+        district: defaultAddr.district || '',
+        ward: defaultAddr.ward || '',
+        note: '',
+      };
+    }
+    return {
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      address: '',
+      city: '',
+      district: '',
+      ward: '',
+      note: '',
+    };
+  });
+
+  /* ── Apply a saved address to the form ── */
+  const applyAddress = (addr) => {
+    setForm(prev => ({
+      ...prev,
+      name: addr.name || prev.name,
+      phone: addr.phone || prev.phone,
+      address: addr.street || '',
+      city: addr.city || '',
+      district: addr.district || '',
+      ward: addr.ward || '',
+    }));
+    setErrors({});
+  };
 
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [errors, setErrors] = useState({});
@@ -140,6 +196,48 @@ export default function Checkout() {
     return Object.keys(newErrors).length === 0;
   };
 
+  /* ── Create order & persist to localStorage ── */
+  const createOrder = () => {
+    const orderId = generateOrderID();
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+
+    const newOrder = {
+      id: orderId,
+      date: dateStr,
+      items: cartItems.map(item => ({
+        name: item.name,
+        qty: item.quantity || 1,
+        price: parseNumericPrice(item.price),
+      })),
+      total: totalPrice,
+      status: 'Chờ xác nhận',
+      payment: paymentMethod === 'vnpay' ? 'VNPAY QR' : 'COD',
+      shipping: {
+        name: form.name,
+        phone: form.phone,
+        address: [form.address, form.ward, form.district, form.city].filter(Boolean).join(', '),
+      },
+    };
+
+    // Persist order
+    try {
+      const existing = JSON.parse(localStorage.getItem('maxxsport_orders') || '[]');
+      existing.unshift(newOrder);
+      localStorage.setItem('maxxsport_orders', JSON.stringify(existing));
+    } catch {
+      localStorage.setItem('maxxsport_orders', JSON.stringify([newOrder]));
+    }
+
+    // Store last order for Success page
+    localStorage.setItem('maxxsport_last_order', JSON.stringify(newOrder));
+
+    // Clear cart
+    localStorage.setItem('maxxsport_cart', '[]');
+    window.dispatchEvent(new Event('cartUpdated'));
+    window.dispatchEvent(new Event('systemDataUpdated'));
+  };
+
   /* ── Submit order ── */
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -148,10 +246,11 @@ export default function Checkout() {
     if (paymentMethod === 'vnpay') {
       setShowVNPayModal(true);
       setTimeout(() => {
+        createOrder();
         window.location.href = '/success';
       }, 7000);
     } else {
-      // COD -> go directly to success
+      createOrder();
       window.location.href = '/success';
     }
   };
@@ -282,6 +381,28 @@ export default function Checkout() {
                 <MapPinIcon />
                 <h2 className="checkout-section__title">Thông tin giao hàng</h2>
               </div>
+
+              {/* Address book picker */}
+              {savedAddresses.length > 0 && (
+                <div className="checkout-addr-picker" id="checkout-addr-picker">
+                  <BookOpenIcon />
+                  <select
+                    className="checkout-addr-picker__select"
+                    onChange={(e) => {
+                      const addr = savedAddresses.find(a => a.id === e.target.value);
+                      if (addr) applyAddress(addr);
+                    }}
+                    defaultValue={savedAddresses.find(a => a.isDefault)?.id || ''}
+                  >
+                    <option value="" disabled>Chọn từ sổ địa chỉ...</option>
+                    {savedAddresses.map(addr => (
+                      <option key={addr.id} value={addr.id}>
+                        {addr.label || 'Địa chỉ'} — {addr.name}, {addr.phone}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="checkout-form-grid">
                 {/* Name */}
