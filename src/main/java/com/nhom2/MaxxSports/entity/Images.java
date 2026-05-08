@@ -1,9 +1,6 @@
 package com.nhom2.MaxxSports.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -22,4 +19,8 @@ public class Images {
     private String url;
 
     private String publicId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_ctsp")
+    private ProductDetail productDetail;
 }

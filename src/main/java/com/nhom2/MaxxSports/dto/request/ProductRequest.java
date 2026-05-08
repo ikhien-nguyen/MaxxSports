@@ -13,5 +13,4 @@ public class ProductRequest {
     private String chatLieu;
     private String loaiSanPham;
     private Double gia;
-    private Integer soLuong;
 }

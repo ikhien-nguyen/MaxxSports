@@ -5,6 +5,7 @@ import com.nhom2.MaxxSports.dto.response.ProductResponse;
 import com.nhom2.MaxxSports.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -16,28 +17,31 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping
+    @GetMapping("/getAllProducts")
     public ResponseEntity<List<ProductResponse>> getAll() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getProduct/{id}")
     public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/create")
     public ResponseEntity<ProductResponse> create(@RequestBody @Valid ProductRequest request) {
         return ResponseEntity.status(201).body(productService.createProduct(request));
     }
 
-    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/updateProduct/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id,
                                                   @RequestBody @Valid ProductRequest request) {
         return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/deleteProduct/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();

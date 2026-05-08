@@ -19,7 +19,7 @@ public class CartService {
 	private final CartItemRepository cartItemRepository;
 	private final ProductDetailRepository productDetailRepository;
 	private final UserRepository userRepository;
-	private final AnhRepository anhRepository;
+	private final ImageRepository imageRepository;
 
 	@Transactional
 	public String addToCart(String email, CartRequest request) {
@@ -65,37 +65,49 @@ public class CartService {
 
 		Cart cart = cartRepository.findByUser(user).orElse(null);
 
-		// Nếu chưa có giỏ hàng, trả về giỏ hàng rỗng
 		if (cart == null) {
-			return CartResponse.builder().soLuongTongGH(0).tongTien(0.0).items(List.of()).build();
+			return CartResponse.builder()
+					.soLuongTongGH(0)
+					.tongTien(0.0)
+					.items(List.of())
+					.build();
 		}
 
 		List<CartItem> cartItems = cartItemRepository.findByCart(cart);
 		double tongTien = 0.0;
 
-		// Chuyển đổi từ CartItem (Entity) sang CartItemResponse (DTO)
 		List<CartItemResponse> itemResponses = cartItems.stream().map(item -> {
 			ProductDetail pd = item.getProductDetail();
 			Product p = pd.getProduct();
 
-			// Lấy ảnh đầu tiên của sản phẩm (nếu có)
-			List<Anh> anhs = anhRepository.findByProductDetail_MaCtsp(pd.getMaCtsp());
-			String urlAnh = anhs.isEmpty() ? null : anhs.get(0).getAnh();
+			List<Images> images = imageRepository.findByProductDetail_MaCtsp(pd.getMaCtsp());
+			String urlAnh = images.isEmpty() ? null : images.get(0).getUrl();
 
 			double thanhTien = p.getGia() * item.getSoLuong();
 
-			return CartItemResponse.builder().id(item.getId()).maCtsp(pd.getMaCtsp()).tenSanPham(p.getTenSanPham())
-					.size(pd.getSize().getSize()).mau(pd.getMau().getMau()).gia(p.getGia()).soLuong(item.getSoLuong())
-					.thanhTien(thanhTien).urlAnh(urlAnh).build();
+			return CartItemResponse.builder()
+					.id(item.getId())
+					.maCtsp(pd.getMaCtsp())
+					.tenSanPham(p.getTenSanPham())
+					.size(pd.getSize().getSize())
+					.mau(pd.getMau().getMau())
+					.gia(p.getGia())
+					.soLuong(item.getSoLuong())
+					.thanhTien(thanhTien)
+					.urlAnh(urlAnh)
+					.build();
 		}).toList();
 
-		// Tính tổng tiền toàn giỏ
 		for (CartItemResponse item : itemResponses) {
 			tongTien += item.getThanhTien();
 		}
 
-		return CartResponse.builder().maGioHang(cart.getMaGioHang()).soLuongTongGH(cart.getSoLuongTongGH())
-				.tongTien(tongTien).items(itemResponses).build();
+		return CartResponse.builder()
+				.maGioHang(cart.getMaGioHang())
+				.soLuongTongGH(cart.getSoLuongTongGH())
+				.tongTien(tongTien)
+				.items(itemResponses)
+				.build();
 	}
 
 	// 3. Hàm cập nhật số lượng món đồ trong giỏ

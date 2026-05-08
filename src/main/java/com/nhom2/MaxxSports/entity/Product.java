@@ -35,6 +35,4 @@ public class Product {
     @Column(name = "gia")
     private Double gia;
 
-    @Column(name = "so_luong")
-    private Integer soLuong;
 }

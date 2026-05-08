@@ -15,22 +15,17 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    // Lấy tất cả sản phẩm
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll()
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
-
-    // Lấy theo ID
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
         return toResponse(product);
     }
-
-    // Tạo mới
     public ProductResponse createProduct(ProductRequest request) {
         Product product = Product.builder()
                 .tenSanPham(request.getTenSanPham())
@@ -39,13 +34,11 @@ public class ProductService {
                 .chatLieu(request.getChatLieu())
                 .loaiSanPham(request.getLoaiSanPham())
                 .gia(request.getGia())
-                .soLuong(request.getSoLuong())
                 .build();
 
         return toResponse(productRepository.save(product));
     }
 
-    // Update
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
@@ -56,17 +49,14 @@ public class ProductService {
         product.setChatLieu(request.getChatLieu());
         product.setLoaiSanPham(request.getLoaiSanPham());
         product.setGia(request.getGia());
-        product.setSoLuong(request.getSoLuong());
 
         return toResponse(productRepository.save(product));
     }
 
-    // Delete
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
     }
 
-    // Convert
     private ProductResponse toResponse(Product product) {
         return ProductResponse.builder()
                 .maSanPham(product.getMaSanPham())
@@ -76,7 +66,6 @@ public class ProductService {
                 .chatLieu(product.getChatLieu())
                 .loaiSanPham(product.getLoaiSanPham())
                 .gia(product.getGia())
-                .soLuong(product.getSoLuong())
                 .build();
     }
 }

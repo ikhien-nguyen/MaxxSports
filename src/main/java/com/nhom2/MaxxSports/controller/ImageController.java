@@ -1,33 +1,53 @@
 package com.nhom2.MaxxSports.controller;
 
-import com.nhom2.MaxxSports.dto.response.ApiResponse;
 import com.nhom2.MaxxSports.entity.Images;
 import com.nhom2.MaxxSports.service.ImageService;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@RestController
-@RequestMapping("/image")
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Slf4j
-public class ImageController {
-    ImageService imageService;
+import java.util.List;
 
-    @PostMapping("/upload")
-    public ApiResponse<Images> upload(@RequestParam("file") MultipartFile file) {
-        return ApiResponse.<Images>builder()
-                .result(imageService.upload(file))
-                .build();
+@RestController
+@RequestMapping("/images")
+@RequiredArgsConstructor
+public class ImageController {
+
+    private final ImageService imageService;
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/upload/{maCtsp}")
+    public ResponseEntity<Images> uploadImage(
+            @PathVariable Long maCtsp,
+            @RequestParam("file") MultipartFile file) {
+
+        return ResponseEntity.ok(
+                imageService.upload(file, maCtsp)
+        );
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable String id) {
+    public ResponseEntity<String> deleteImage(@PathVariable String id) {
         imageService.delete(id);
-        return "Deleted successfully";
+        return ResponseEntity.ok("Xóa ảnh thành công");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Images> getImage(@PathVariable String id) {
+        return ResponseEntity.ok(
+                imageService.getById(id)
+        );
+    }
+
+    // Lấy toàn bộ ảnh của product detail
+    @GetMapping("/product-detail/{maCtsp}")
+    public ResponseEntity<List<Images>> getImagesByProductDetail(
+            @PathVariable Long maCtsp) {
+        return ResponseEntity.ok(
+                imageService.getByProductDetail(maCtsp)
+        );
     }
 }

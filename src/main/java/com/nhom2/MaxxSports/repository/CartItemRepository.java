@@ -11,8 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
-    // Dùng để kiểm tra xem món đồ này đã có trong giỏ chưa.
-    // Nếu có rồi thì cộng dồn số lượng, chưa có thì mới tạo mới.
     Optional<CartItem> findByCartAndProductDetail(Cart cart, ProductDetail productDetail);
     List<CartItem> findByCart(Cart cart);
 }

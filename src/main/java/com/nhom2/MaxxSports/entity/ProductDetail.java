@@ -17,6 +17,8 @@ public class ProductDetail {
     @Column(name = "ma_ctsp")
     private Long maCtsp;
 
+    @Column(name = "so_luong")
+    private Integer soLuong;
     // Nối với bảng Product
     @ManyToOne
     @JoinColumn(name = "ma_san_pham")
@@ -27,12 +29,9 @@ public class ProductDetail {
     @JoinColumn(name = "ma_size")
     private Size size;
 
-    // Nối với bảng Màu
+    // Nối với bản g Màu
     @ManyToOne
     @JoinColumn(name = "ma_mau")
     private Mau mau;
 
-    // Số lượng tồn kho của riêng biến thể này
-    @Column(name = "so_luong_ton")
-    private Integer soLuongTon;
 }

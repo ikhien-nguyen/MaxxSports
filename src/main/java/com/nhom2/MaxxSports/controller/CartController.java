@@ -19,13 +19,9 @@ public class CartController {
 
     @PostMapping("/add")
     public ResponseEntity<String> addToCart(@RequestBody @Valid CartRequest request, Principal principal) {
-        
-        // Principal là một object của Spring Security, nó sẽ tự động lấy thông tin 
-        // người dùng đang đăng nhập (thông qua token JWT bạn gửi lên từ Postman).
-        // Hàm getName() sẽ trả về Email của người đăng nhập.
+
         String email = principal.getName(); 
 
-        // Gọi Service xử lý logic và nhận lại câu thông báo
         String response = cartService.addToCart(email, request);
         
         return ResponseEntity.ok(response);
