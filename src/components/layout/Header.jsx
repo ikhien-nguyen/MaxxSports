@@ -76,6 +76,17 @@ const CloseIcon = () => (
   </svg>
 );
 
+/* ── Brand Logo Component ────────────────────────────────────── */
+const XSportLogo = () => (
+  <div className="xsport-brand-logo">
+    <span className="xsport-x">
+      X
+      <span className="xsport-x-slash"></span>
+    </span>
+    <span className="xsport-text">SPORT</span>
+  </div>
+);
+
 /* Small caret for dropdown trigger */
 const CaretDown = () => (
   <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
@@ -167,11 +178,7 @@ export default function Header() {
         {/* LEFT ZONE — Logo */}
         <div className="header-left">
           <a href="/" aria-label="Trang chủ XSPORT" className="header-logo-link">
-            <img
-              src="/assets/logo_asset.png"
-              alt="XSPORT — Siêu thị thể thao"
-              className="header-logo-img"
-            />
+            <XSportLogo />
           </a>
         </div>
 

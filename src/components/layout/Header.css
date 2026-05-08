@@ -46,18 +46,55 @@
   align-items: center;
 }
 
-.header-logo-img {
-  height: auto;
-  max-height: 50px;
-  width: auto;
-  object-fit: contain;
-  display: block;
-  margin: 4px 0;
-  transition: opacity 0.2s ease;
+/* ── CSS Logo Styling ────────────────────────────────────────── */
+.xsport-brand-logo {
+  display: flex;
+  align-items: baseline;
+  font-family: var(--font-family);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.5px;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  line-height: 1;
 }
 
-.header-logo-img:hover {
-  opacity: 0.85;
+.xsport-brand-logo:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.xsport-x {
+  color: #ffb800; /* Fallback */
+  font-size: 34px;
+  background: linear-gradient(135deg, #FFE066 0%, #FFB800 50%, #E68A00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-right: 2px;
+  position: relative;
+  line-height: 1;
+  padding-right: 2px;
+}
+
+/* Speed slashes for X */
+.xsport-x-slash {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #000; /* Cut effect */
+  transform: skewX(-15deg);
+  box-shadow: 0 -8px 0 0 #000, 0 8px 0 0 #000;
+}
+
+.xsport-text {
+  color: #ffffff;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: 1px;
 }
 
 /* ================================================================
@@ -608,8 +645,9 @@
     gap: 10px;
   }
 
-  .header-logo-img {
-    height: 34px;
+  .xsport-brand-logo {
+    transform: scale(0.85);
+    transform-origin: left center;
   }
 
   /* Hide search text input, keep icon */
@@ -628,8 +666,9 @@
     height: 58px;
   }
 
-  .header-logo-img {
-    height: 30px;
+  .xsport-brand-logo {
+    transform: scale(0.75);
+    transform-origin: left center;
   }
 
   /* Hide search pill entirely */
