@@ -1,0 +1,110 @@
+/* d:\flie bài tập\MaxxSports-main\src\pages\Admin\AdminCustomers.css */
+.admin-customers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+.customers-header-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.export-btn {
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.export-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.customers-table-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.customers-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.customers-table th {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.customers-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.customers-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.customers-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.customer-name-col {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.customer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fffbeb;
+  color: #ffb800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.customer-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.customer-email {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.customer-total-spent {
+  font-weight: 600;
+  color: #10b981; /* Green */
+}
+
+.empty-customers {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+}

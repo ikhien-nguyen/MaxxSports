@@ -1,0 +1,270 @@
+/* d:\flie bài tập\MaxxSports-main\src\pages\Admin\AdminProducts.css */
+.admin-products-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+.products-header-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.add-product-btn {
+  background-color: #ffb800;
+  color: #0f172a;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.add-product-btn:hover {
+  background-color: #e6a600;
+}
+
+.products-table-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.products-table th {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.products-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.products-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.products-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.product-image-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.product-name-col {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.product-category-badge {
+  background-color: #f1f5f9;
+  color: #64748b;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.product-price {
+  font-weight: 600;
+}
+
+.action-btns {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.action-btn svg {
+  stroke: #64748b;
+  width: 18px;
+  height: 18px;
+}
+
+.action-btn.edit-btn:hover {
+  background-color: #e0f2fe;
+}
+
+.action-btn.edit-btn:hover svg {
+  stroke: #0284c7;
+}
+
+.action-btn.delete-btn:hover {
+  background-color: #fee2e2;
+}
+
+.action-btn.delete-btn:hover svg {
+  stroke: #ef4444;
+}
+
+/* Modal Overlay */
+.product-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.product-modal {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90vw;
+  padding: 30px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.close-modal-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.close-modal-btn:hover {
+  color: #0f172a;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.form-group input, .form-group select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #0f172a;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus {
+  border-color: #ffb800;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.save-btn {
+  background-color: #0f172a;
+  border: none;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.save-btn:hover {
+  background-color: #1e293b;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+}

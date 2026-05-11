@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from '../pages/Home/Home';
 import Product from '../pages/Product/Product';
 import Cart from '../pages/Cart/Cart';
@@ -11,42 +11,71 @@ import Account from '../pages/Account/Account';
 import CategoryPage from '../pages/Category/Category';
 import NotFound from '../pages/NotFound';
 import MainLayout from '../components/layout/MainLayout';
+import AdminLayout from '../pages/Admin/AdminLayout';
+
+const AdminRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('xsport_user') || 'null');
+  if (!user || user.role !== 'ADMIN') {
+    return <Navigate to="/auth" replace />;
+  }
+  return children;
+};
+
+const CustomerRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('xsport_user') || 'null');
+  if (user && user.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />;
+  }
+  return children;
+};
 
 export default function AppRoutes() {
   return (
     <Router>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/product/:id" element={<Product />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/payment" element={<Payment />} />
-          <Route path="/payment-management" element={<PaymentManagement />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="/account" element={<Account />} />
+      <Routes>
+        <Route path="/admin/*" element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        } />
+        <Route path="/*" element={
+          <MainLayout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/product/:id" element={<Product />} />
+              
+              {/* Customer Only Routes */}
+              <Route path="/cart" element={<CustomerRoute><Cart /></CustomerRoute>} />
+              <Route path="/account" element={<CustomerRoute><Account /></CustomerRoute>} />
+              <Route path="/checkout" element={<CustomerRoute><Checkout /></CustomerRoute>} />
+              <Route path="/success" element={<CustomerRoute><Success /></CustomerRoute>} />
+              
+              <Route path="/payment" element={<Payment />} />
+              <Route path="/payment-management" element={<PaymentManagement />} />
 
-          {/* ── Universal Category Routes ─────────────────────── */}
-          <Route path="/new-arrivals" element={<CategoryPage categoryType="status" categoryValue="new" pageTitle="SẢN PHẨM MỚI" />} />
-          <Route path="/nam" element={<CategoryPage categoryType="gender" categoryValue="nam" pageTitle="NAM" />} />
-          <Route path="/nu" element={<CategoryPage categoryType="gender" categoryValue="nu" pageTitle="NỮ" />} />
-          <Route path="/tre-em" element={<CategoryPage categoryType="gender" categoryValue="tre-em" pageTitle="TRẺ EM" />} />
-          <Route path="/outlet" element={<CategoryPage categoryType="status" categoryValue="outlet" pageTitle="OUTLET" />} />
-          <Route path="/category" element={<CategoryPage pageTitle="TẤT CẢ SẢN PHẨM" />} />
+              {/* ── Universal Category Routes ─────────────────────── */}
+              <Route path="/new-arrivals" element={<CategoryPage categoryType="status" categoryValue="new" pageTitle="SẢN PHẨM MỚI" />} />
+              <Route path="/nam" element={<CategoryPage categoryType="gender" categoryValue="nam" pageTitle="NAM" />} />
+              <Route path="/nu" element={<CategoryPage categoryType="gender" categoryValue="nu" pageTitle="NỮ" />} />
+              <Route path="/tre-em" element={<CategoryPage categoryType="gender" categoryValue="tre-em" pageTitle="TRẺ EM" />} />
+              <Route path="/outlet" element={<CategoryPage categoryType="status" categoryValue="outlet" pageTitle="OUTLET" />} />
+              <Route path="/category" element={<CategoryPage pageTitle="TẤT CẢ SẢN PHẨM" />} />
 
-          {/* ── Sport Category Routes ─────────────────────────── */}
-          <Route path="/sport/pickleball" element={<CategoryPage categoryType="sport" categoryValue="pickleball" pageTitle="PICKLEBALL" />} />
-          <Route path="/sport/cau-long" element={<CategoryPage categoryType="sport" categoryValue="cau-long" pageTitle="CẦU LÔNG" />} />
-          <Route path="/sport/bong-da" element={<CategoryPage categoryType="sport" categoryValue="bong-da" pageTitle="BÓNG ĐÁ" />} />
-          <Route path="/sport/bong-ro" element={<CategoryPage categoryType="sport" categoryValue="bong-ro" pageTitle="BÓNG RỔ" />} />
-          <Route path="/sport/chay-bo" element={<CategoryPage categoryType="sport" categoryValue="chay-bo" pageTitle="CHẠY BỘ" />} />
-          <Route path="/sport/tennis" element={<CategoryPage categoryType="sport" categoryValue="tennis" pageTitle="TENNIS" />} />
-          <Route path="/sport/golf" element={<CategoryPage categoryType="sport" categoryValue="golf" pageTitle="GOLF" />} />
+              {/* ── Sport Category Routes ─────────────────────────── */}
+              <Route path="/sport/pickleball" element={<CategoryPage categoryType="sport" categoryValue="pickleball" pageTitle="PICKLEBALL" />} />
+              <Route path="/sport/cau-long" element={<CategoryPage categoryType="sport" categoryValue="cau-long" pageTitle="CẦU LÔNG" />} />
+              <Route path="/sport/bong-da" element={<CategoryPage categoryType="sport" categoryValue="bong-da" pageTitle="BÓNG ĐÁ" />} />
+              <Route path="/sport/bong-ro" element={<CategoryPage categoryType="sport" categoryValue="bong-ro" pageTitle="BÓNG RỔ" />} />
+              <Route path="/sport/chay-bo" element={<CategoryPage categoryType="sport" categoryValue="chay-bo" pageTitle="CHẠY BỘ" />} />
+              <Route path="/sport/tennis" element={<CategoryPage categoryType="sport" categoryValue="tennis" pageTitle="TENNIS" />} />
+              <Route path="/sport/golf" element={<CategoryPage categoryType="sport" categoryValue="golf" pageTitle="GOLF" />} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </MainLayout>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </MainLayout>
+        } />
+      </Routes>
     </Router>
   );
 }

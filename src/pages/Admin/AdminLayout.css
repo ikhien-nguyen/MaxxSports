@@ -1,0 +1,278 @@
+/* d:\flie bài tập\MaxxSports-main\src\pages\Admin\AdminLayout.css */
+.admin-layout-container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+  background-color: #f8fafc; /* Main Background */
+  color: #0f172a; /* Text headings */
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+/* Sidebar Styles */
+.admin-sidebar {
+  background-color: #0f172a; /* Deep Slate Background */
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1e293b;
+}
+
+.admin-logo-container {
+  padding: 25px 20px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.admin-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ffb800;
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.admin-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #f8fafc;
+}
+
+.admin-role {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.admin-nav {
+  padding: 20px 0;
+  flex-grow: 1;
+}
+
+.admin-nav-item {
+  padding: 15px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #94a3b8; /* Light Slate text */
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.admin-nav-item svg {
+  stroke: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.admin-nav-item:hover, .admin-nav-item.active {
+  color: #ffffff; /* Pure White text */
+  font-weight: 700;
+  background-color: rgba(255, 184, 0, 0.05); /* Very subtle yellow bg */
+  border-left: 4px solid #ffb800; /* Thick indicator */
+}
+
+.admin-nav-item:hover svg, .admin-nav-item.active svg {
+  stroke: #ffb800;
+}
+
+.admin-logout-btn {
+  margin-top: auto;
+  margin-bottom: 20px;
+  background: none;
+  border: none;
+  width: 100%;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ef4444;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.admin-logout-btn svg {
+  stroke: #ef4444;
+}
+
+.admin-logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid #ef4444;
+}
+
+/* Main Content Styles */
+.admin-main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-header-title h1 {
+  font-size: 24px;
+  margin: 0 0 5px 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-header-title p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.admin-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-search-wrapper svg {
+  position: absolute;
+  left: 12px;
+  stroke: #64748b;
+}
+
+.admin-search-bar {
+  background-color: #f1f5f9; /* Light gray background */
+  border: 1px solid transparent;
+  border-radius: 20px; /* Rounded corners */
+  padding: 10px 15px 10px 36px;
+  color: #0f172a;
+  width: 250px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.admin-search-bar::placeholder {
+  color: #94a3b8;
+}
+
+.admin-search-bar:focus {
+  border-color: #ffb800;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.1);
+}
+
+.admin-bell-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.admin-bell-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.admin-bell-btn svg {
+  stroke: #64748b;
+}
+
+.admin-bell-badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.admin-date-filter {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  font-weight: 500;
+}
+
+.admin-date-filter:focus {
+  border-color: #ffb800;
+}
+
+.admin-content-area {
+  padding: 40px;
+  flex-grow: 1;
+}
+
+/* Mock Components Styles (for generic fallback if needed) */
+.admin-dashboard-placeholder {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 30px;
+  border: 1px solid #e2e8f0;
+  min-height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #64748b;
+  font-size: 18px;
+  flex-direction: column;
+}
+
+.admin-dashboard-placeholder h2 {
+    color: #0f172a;
+}

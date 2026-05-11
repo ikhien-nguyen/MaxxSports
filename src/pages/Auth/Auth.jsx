@@ -2,12 +2,8 @@ import { useState, useEffect } from 'react';
 import './Auth.css';
 
 /* ─────────────────────────────────────────────
-   MOCK DATABASE — Role-based users
+   MOCK DATABASE — Role-based users (Dynamic)
 ───────────────────────────────────────────── */
-const mockUsers = [
-  { email: 'user@gmail.com', password: 'user123', role: 'CUSTOMER', name: 'Khách hàng' },
-  { email: 'admin@xsport.com', password: 'admin123', role: 'ADMIN', name: 'Quản trị viên' },
-];
 
 /* ─────────────────────────────────────────────
    INLINE SVG ICONS
@@ -91,6 +87,7 @@ export default function Auth() {
   }, []);
 
   const [isLoginView, setIsLoginView] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -112,6 +109,7 @@ export default function Auth() {
 
   const toggleView = () => {
     setIsLoginView((prev) => !prev);
+    setIsForgotPassword(false);
     setFormData({ email: '', password: '', name: '', phone: '', confirmPassword: '' });
     setError('');
     setSuccess('');
@@ -163,24 +161,58 @@ export default function Auth() {
     setError('');
     setSuccess('');
 
+    let db = [];
+    try {
+      const stored = localStorage.getItem('xsport_users_db');
+      if (stored) db = JSON.parse(stored);
+    } catch { }
+
+    if (isForgotPassword) {
+      if (!formData.email.trim()) {
+        setError('Vui lòng nhập email.');
+        return;
+      }
+      let foundUser = null;
+      for (let i = 0; i < db.length; i++) {
+        if (db[i].email === formData.email) {
+          foundUser = db[i];
+          break;
+        }
+      }
+      if (!foundUser) {
+        setError('Email không tồn tại trong hệ thống.');
+      } else {
+        setSuccess('✅ Đã gửi liên kết khôi phục đến Email của bạn. Vui lòng kiểm tra hộp thư.');
+      }
+      return;
+    }
+
     if (isLoginView) {
       /* ── LOGIN ── */
-      const user = mockUsers.find(
-        (u) => u.email === formData.email && u.password === formData.password
-      );
-      if (user) {
-        /* Persist user (without password) to localStorage */
-        const persistedUser = { email: user.email, name: user.name, role: user.role };
-        localStorage.setItem('xsport_user', JSON.stringify(persistedUser));
+      if (formData.email === 'admin@xsport.com' && formData.password === 'admin123') {
+        const adminSession = { name: 'Super Admin', email: formData.email, role: 'ADMIN' };
+        localStorage.setItem('xsport_user', JSON.stringify(adminSession));
+        window.dispatchEvent(new Event('xsportDataUpdated'));
+        window.location.href = '/admin'; // Redirect immediately
+        return; // STOP execution
+      }
 
-        /* ── CART MERGE: guest cart ↔ user's saved cart ── */
-        mergeCartsOnLogin(user.email);
+      // Else -> Proceed to search inside xsport_users_db for CUSTOMER
+      let foundUser = null;
+      for (let i = 0; i < db.length; i++) {
+        if (db[i].email === formData.email && db[i].password === formData.password) {
+          foundUser = db[i];
+          break;
+        }
+      }
 
-        setCurrentUser(persistedUser);
-        alert('Đăng nhập thành công! Quyền: ' + user.role + ' — Xin chào, ' + user.name);
+      if (foundUser) {
+        localStorage.setItem('xsport_user', JSON.stringify(foundUser));
+        mergeCartsOnLogin(formData.email);
+        window.dispatchEvent(new Event('xsportDataUpdated'));
         window.location.href = '/';
       } else {
-        setError('Email hoặc mật khẩu không đúng.');
+        setError('Sai tài khoản hoặc mật khẩu.');
       }
     } else {
       /* ── REGISTER ── */
@@ -200,14 +232,35 @@ export default function Auth() {
         setError('Mật khẩu xác nhận không khớp.');
         return;
       }
-      const exists = mockUsers.find((u) => u.email === formData.email);
-      if (exists) {
-        setError('Email này đã được sử dụng.');
+      
+      let emailExists = false;
+      for (let i = 0; i < db.length; i++) {
+        if (db[i].email === formData.email) {
+          emailExists = true;
+          break;
+        }
+      }
+
+      if (emailExists) {
+        setError('Email đã tồn tại.');
         return;
       }
-      setSuccess('Đăng ký thành công! Vui lòng đăng nhập.');
-      setIsLoginView(true);
-      setFormData({ email: formData.email, password: '', name: '', phone: '', confirmPassword: '' });
+
+      const newUser = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || '',
+        password: formData.password,
+        role: 'CUSTOMER'
+      };
+
+      db.push(newUser);
+      localStorage.setItem('xsport_users_db', JSON.stringify(db));
+      
+      localStorage.setItem('xsport_user', JSON.stringify(newUser));
+      mergeCartsOnLogin(newUser.email);
+      window.dispatchEvent(new Event('xsportDataUpdated'));
+      window.location.href = '/';
     }
   };
 
@@ -239,11 +292,12 @@ export default function Auth() {
 
           {/* Title */}
           <h1 className="auth-title" id="auth-page-title">
-            {isLoginView ? 'ĐĂNG NHẬP TÀI KHOẢN' : 'ĐĂNG KÝ TÀI KHOẢN'}
+            {isForgotPassword ? 'QUÊN MẬT KHẨU' : (isLoginView ? 'ĐĂNG NHẬP TÀI KHOẢN' : 'ĐĂNG KÝ TÀI KHOẢN')}
           </h1>
 
           {/* Toggle hint */}
-          <p className="auth-subtitle">
+          {!isForgotPassword && (
+            <p className="auth-subtitle">
             {isLoginView ? (
               <>
                 Bạn chưa có tài khoản?{' '}
@@ -269,7 +323,8 @@ export default function Auth() {
                 </button>
               </>
             )}
-          </p>
+            </p>
+          )}
 
           {/* Error / Success */}
           {error && (
@@ -286,6 +341,34 @@ export default function Auth() {
           )}
 
           {/* ── Form ── */}
+          {isForgotPassword ? (
+            <form className="auth-form" onSubmit={handleSubmit} noValidate>
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="auth-email">
+                  Nhập Email của bạn <span className="auth-required">*</span>
+                </label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><MailIcon /></span>
+                  <input
+                    id="auth-email"
+                    type="email"
+                    name="email"
+                    className="auth-input"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+              <button type="submit" className="auth-submit-btn" style={{ marginBottom: '12px' }}>
+                Gửi yêu cầu
+              </button>
+              <button type="button" className="auth-submit-btn" style={{ background: '#333', color: '#fff' }} onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); }}>
+                Quay lại đăng nhập
+              </button>
+            </form>
+          ) : (
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
 
             {/* Họ tên — register only */}
@@ -417,11 +500,11 @@ export default function Auth() {
             )}
 
             {/* Quên mật khẩu — login only */}
-            {isLoginView && (
+            {isLoginView && !isForgotPassword && (
               <div className="auth-forgot-row">
-                <a href="/auth" className="auth-forgot-link" id="forgot-password-link">
+                <button type="button" className="auth-forgot-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }} id="forgot-password-link" onClick={() => { setIsForgotPassword(true); setError(''); setSuccess(''); }}>
                   Quên mật khẩu? Nhấn vào đây
-                </a>
+                </button>
               </div>
             )}
 
@@ -430,6 +513,7 @@ export default function Auth() {
               {isLoginView ? 'Đăng nhập' : 'Đăng ký'}
             </button>
           </form>
+          )}
 
           {/* Social login divider */}
           <div className="auth-divider">

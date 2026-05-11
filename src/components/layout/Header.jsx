@@ -248,8 +248,8 @@ export default function Header() {
               <button
                 type="button"
                 className="icon-btn user-icon-link user-icon-link--logged"
-                title={`Xin chào, ${currentUser.name}`}
-                aria-label={`Menu tài khoản — ${currentUser.name}`}
+                title={`Xin chào, ${currentUser.name || 'User'}`}
+                aria-label={`Menu tài khoản — ${currentUser.name || 'User'}`}
                 aria-expanded={userDropdownOpen}
                 onClick={() => setUserDropdownOpen((v) => !v)}
                 id="user-menu-trigger"
@@ -262,19 +262,26 @@ export default function Header() {
                 <div className="user-dropdown" id="user-dropdown-menu">
                   <div className="user-dropdown__header">
                     <div className="user-dropdown__avatar">
-                      {currentUser.name.charAt(0).toUpperCase()}
+                      {(currentUser.name || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="user-dropdown__info">
-                      <span className="user-dropdown__name">{currentUser.name}</span>
+                      <span className="user-dropdown__name">{currentUser.name || 'User'}</span>
                       <span className="user-dropdown__email">{currentUser.email}</span>
                       <span className="user-dropdown__role">{currentUser.role}</span>
                     </div>
                   </div>
                   <div className="user-dropdown__divider" />
-                  <a href="/account" className="user-dropdown__link" id="dropdown-account-link">
-                    <UserIcon />
-                    Tài khoản của tôi
-                  </a>
+                  {currentUser.role === 'ADMIN' ? (
+                    <a href="/admin" className="user-dropdown__link" id="dropdown-admin-link">
+                      <UserIcon />
+                      Bảng điều khiển Admin
+                    </a>
+                  ) : (
+                    <a href="/account" className="user-dropdown__link" id="dropdown-account-link">
+                      <UserIcon />
+                      Tài khoản của tôi
+                    </a>
+                  )}
                   <div className="user-dropdown__divider" />
                   <button
                     type="button"
@@ -295,6 +302,7 @@ export default function Header() {
           )}
 
           {/* Cart — links to /cart */}
+          {currentUser?.role !== 'ADMIN' && (
           <a
             href="/cart"
             className="icon-btn cart-btn"
@@ -306,6 +314,7 @@ export default function Header() {
               <span className="cart-badge" aria-hidden="true">{cartCount}</span>
             )}
           </a>
+          )}
 
           {/* Hamburger — mobile only */}
           <button

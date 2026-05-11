@@ -197,18 +197,17 @@ const SEED_ORDERS = [
   },
 ];
 
-/* ── Helper: merge seed + localStorage orders, deduplicate by id ── */
-function loadOrders() {
+/* ── Helper: load orders and filter by user ── */
+function loadOrders(userEmail) {
   try {
     const stored = JSON.parse(localStorage.getItem('xsport_orders') || '[]');
-    const merged = [...stored];
-    const ids = new Set(stored.map(o => o.id));
-    for (const seed of SEED_ORDERS) {
-      if (!ids.has(seed.id)) merged.push(seed);
+    let merged = stored;
+    if (userEmail) {
+      merged = stored.filter(o => o.email === userEmail || o.customerName === userEmail);
     }
     return merged;
   } catch {
-    return [...SEED_ORDERS];
+    return [];
   }
 }
 
@@ -257,18 +256,18 @@ export default function Account() {
   const [showPw, setShowPw] = useState({ current: false, newPw: false, confirm: false });
 
   /* ── Orders state (dynamic from localStorage) ── */
-  const [orders, setOrders] = useState(loadOrders);
+  const [orders, setOrders] = useState(() => loadOrders(user.email));
 
-  /* ── Listen for systemDataUpdated to refresh orders in real-time ── */
+  /* ── Listen for xsportDataUpdated to refresh orders in real-time ── */
   useEffect(() => {
-    const refresh = () => setOrders(loadOrders());
-    window.addEventListener('systemDataUpdated', refresh);
+    const refresh = () => setOrders(loadOrders(user.email));
+    window.addEventListener('xsportDataUpdated', refresh);
     window.addEventListener('storage', refresh);
     return () => {
-      window.removeEventListener('systemDataUpdated', refresh);
+      window.removeEventListener('xsportDataUpdated', refresh);
       window.removeEventListener('storage', refresh);
     };
-  }, []);
+  }, [user.email]);
 
   /* ── Address Book state ── */
   const ADDR_KEY = `xsport_addresses_${user.email || 'guest'}`;
@@ -540,18 +539,24 @@ export default function Account() {
                 ) : (
                   <div className="acc-orders-list">
                     {orders.map((order) => {
-                      const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG['Chờ xác nhận'];
-                      const currentStep = cfg.step;
+                      // Strict mapping logic for current step
+                      const cleanStatus = (order.status || '').replace(/[\u23F3\uD83D\uDE9A\u2714\uFE0F\u274C📦⏳🚚✔️❌]/g, '').trim();
+                      const statusSteps = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Hoàn thành'];
+                      let currentStep = statusSteps.indexOf(cleanStatus);
+                      if (currentStep === -1) currentStep = 0; // Default if not found
+
+                      const cfg = STATUS_CONFIG[cleanStatus] || STATUS_CONFIG['Chờ xác nhận'];
+
                       return (
                         <div className="acc-order-card" key={order.id}>
                           {/* Header row */}
                           <div className="acc-order-card__head">
                             <div className="acc-order-card__id-group">
-                              <span className="acc-order-card__id">{order.id}</span>
-                              <span className="acc-order-card__date">{order.date}</span>
+                              <span className="acc-order-card__id">#MS{order.id.toString().substring(0,6).toUpperCase()}</span>
+                              <span className="acc-order-card__date">{order.date ? new Date(order.date).toLocaleString('vi-VN') : ''}</span>
                             </div>
                             <span className="acc-order-card__status" style={{ color: cfg.color, background: cfg.bg }}>
-                              {order.status}
+                              {cleanStatus}
                             </span>
                           </div>
 
@@ -560,7 +565,7 @@ export default function Account() {
                             {order.items.map((item, i) => (
                               <div className="acc-order-card__item" key={i}>
                                 <span className="acc-order-card__item-name">{item.name}</span>
-                                <span className="acc-order-card__item-meta">x{item.qty} — {formatPrice(item.price)}</span>
+                                <span className="acc-order-card__item-meta">x{item.qty || item.quantity || 1} — {formatPrice(item.price)}</span>
                               </div>
                             ))}
                           </div>
@@ -573,7 +578,7 @@ export default function Account() {
                               const StepIcon = TIMELINE_ICONS[idx];
                               return (
                                 <div className={`acc-timeline__step${done ? ' acc-timeline__step--done' : ''}${isActive ? ' acc-timeline__step--active' : ''}`} key={step}>
-                                  <div className={`acc-timeline__dot acc-timeline__dot--s${idx}`}>
+                                  <div className="acc-timeline__dot">
                                     <StepIcon />
                                   </div>
                                   {idx < TIMELINE_STEPS.length - 1 && (

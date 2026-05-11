@@ -518,17 +518,13 @@
 .acc-timeline__dot svg { color: #bbb; width: 13px; height: 13px; }
 
 /* Per-step color coding (done state) */
-.acc-timeline__step--done .acc-timeline__dot--s0 { background: #888; border-color: #888; }
-.acc-timeline__step--done .acc-timeline__dot--s1 { background: #2563eb; border-color: #2563eb; }
-.acc-timeline__step--done .acc-timeline__dot--s2 { background: #d97706; border-color: #d97706; }
-.acc-timeline__step--done .acc-timeline__dot--s3 { background: #16a34a; border-color: #16a34a; }
+.acc-timeline__step--done .acc-timeline__dot { background: #ffb800; border-color: #ffb800; }
+.acc-timeline__step--done:last-child .acc-timeline__dot { background: #16a34a; border-color: #16a34a; }
 .acc-timeline__step--done .acc-timeline__dot svg { color: #fff; }
 
 /* Active step — pulsing glow with step-specific color */
-.acc-timeline__step--active .acc-timeline__dot--s0 { background: #888; border-color: #888; box-shadow: 0 0 0 5px rgba(136,136,136,0.2); animation: accPulseGray 2s ease infinite; }
-.acc-timeline__step--active .acc-timeline__dot--s1 { background: #2563eb; border-color: #2563eb; box-shadow: 0 0 0 5px rgba(37,99,235,0.2); animation: accPulseBlue 2s ease infinite; }
-.acc-timeline__step--active .acc-timeline__dot--s2 { background: #d97706; border-color: #d97706; box-shadow: 0 0 0 5px rgba(217,119,6,0.2); animation: accPulseYellow 2s ease infinite; }
-.acc-timeline__step--active .acc-timeline__dot--s3 { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 5px rgba(22,163,74,0.2); animation: accPulseGreen 2s ease infinite; }
+.acc-timeline__step--active .acc-timeline__dot { background: #ffb800; border-color: #ffb800; box-shadow: 0 0 0 5px rgba(255,184,0,0.2); animation: accPulseYellow 2s ease infinite; }
+.acc-timeline__step--active:last-child .acc-timeline__dot { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 5px rgba(22,163,74,0.2); animation: accPulseGreen 2s ease infinite; }
 .acc-timeline__step--active .acc-timeline__dot svg { color: #fff; }
 
 
@@ -540,12 +536,12 @@
   left: calc(50% + 14px);
   width: calc(100% - 28px);
   height: 3px;
-  background: #e8e8e8;
+  background: #e5e7eb;
   z-index: 0;
   border-radius: 2px;
 }
 .acc-timeline__line--done {
-  background: #16a34a;
+  background: #ffb800;
 }
 
 /* Label */
