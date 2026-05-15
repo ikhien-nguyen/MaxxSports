@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProductRequest {
-
     private String tenSanPham;
     private String moTa;
     private String thuongHieu;

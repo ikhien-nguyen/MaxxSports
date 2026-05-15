@@ -3,6 +3,8 @@ package com.nhom2.MaxxSports.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,7 +13,6 @@ import lombok.*;
 @Entity
 @Table(name = "product")
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ma_san_pham")
@@ -35,4 +36,9 @@ public class Product {
     @Column(name = "gia")
     private Double gia;
 
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL
+    )
+    private List<ProductDetail> productDetails;
 }

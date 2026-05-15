@@ -1,6 +1,6 @@
 package com.nhom2.MaxxSports.configuration;
 
-import com.nhom2.MaxxSports.entity.Roles;
+import com.nhom2.MaxxSports.enums.Roles;
 import com.nhom2.MaxxSports.entity.User;
 import com.nhom2.MaxxSports.repository.UserRepository;
 import lombok.AccessLevel;
