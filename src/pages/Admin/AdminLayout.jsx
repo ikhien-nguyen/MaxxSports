@@ -80,6 +80,7 @@ const menuItems = [
 
 const AdminLayout = () => {
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const currentUser = JSON.parse(localStorage.getItem('xsport_user') || '{}');
 
   const renderContent = () => {
     switch (activeTab) {
@@ -108,14 +109,15 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="admin-logo-container">
-          <div style={{color: '#ffb800', fontSize: '24px', fontWeight: '900', letterSpacing: '2px'}}>XSPORT</div>
+          <div style={{color: '#ffb800', fontSize: '24px', fontWeight: '900', letterSpacing: '2px', fontStyle: 'italic'}}><span style={{background:'linear-gradient(135deg,#FFE066,#FFB800,#E68A00)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>X</span><span style={{color:'#fff'}}>SPORT</span></div>
+          <span style={{color:'#64748b',fontSize:'11px',marginTop:'2px'}}>Admin Panel</span>
         </div>
         
         <div className="admin-profile">
-          <div className="admin-avatar">AR</div>
+          <div className="admin-avatar">{(currentUser.name || 'A').charAt(0).toUpperCase()}</div>
           <div className="admin-info">
-            <span className="admin-name">Alex R.</span>
-            <span className="admin-role">Super Admin</span>
+            <span className="admin-name">{currentUser.name || 'Admin'}</span>
+            <span className="admin-role">{currentUser.role || 'ADMIN'}</span>
           </div>
         </div>
 

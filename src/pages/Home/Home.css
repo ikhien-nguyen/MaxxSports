@@ -273,14 +273,15 @@
 
 /* Ghost button — "Thêm vào giỏ" */
 .action-btn--ghost {
-  color: var(--color-text-main, #000000);
-  background: transparent;
-  border: 1.5px solid var(--color-text-main, #000000);
+  color: #0f172a;
+  background: #ffffff;
+  border: 2px solid #0f172a;
+  font-weight: 700;
 }
 
 .action-btn--ghost:hover {
-  background: var(--color-text-main, #000000);
-  color: #ffffff;
+  background: #f8fafc;
+  transform: translateY(-1px);
 }
 
 .action-btn--ghost:active {
@@ -289,16 +290,18 @@
 
 /* Primary button — "Mua ngay" */
 .action-btn--primary {
-  color: var(--color-text-main, #000000);
-  background: var(--brand-yellow, #ffb800);
-  border: 1.5px solid var(--brand-yellow, #ffb800);
+  color: #0f172a;
+  background: #ffb800;
+  border: 2px solid #ffb800;
   font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .action-btn--primary:hover {
-  background: var(--brand-yellow-hover, #ffc24d);
-  border-color: var(--brand-yellow-hover, #ffc24d);
-  box-shadow: 0 4px 12px rgba(255, 184, 0, 0.35);
+  background: #e6a600;
+  border-color: #e6a600;
+  box-shadow: 0 6px 15px rgba(255, 184, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 .action-btn--primary:active {

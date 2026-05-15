@@ -129,18 +129,22 @@ function CpProductCard({ product, onAddToCart }) {
           onClick={(e) => onAddToCart(e, product)}
           aria-label={`Thêm ${name} vào giỏ hàng`}
         >
-          <CartIcon /> Thêm vào giỏ
+          <CartIcon /> THÊM VÀO GIỎ
         </button>
         <button
           type="button"
           className="cp-card__btn cp-card__btn--primary"
           onClick={(e) => {
             e.preventDefault();
-            alert('Chuyển hướng mua ngay: ' + name);
+            const cartItem = { id, cartId: Date.now(), name, brand, price, image, quantity: 1 };
+            const existing = JSON.parse(localStorage.getItem('xsport_cart') || '[]');
+            localStorage.setItem('xsport_cart', JSON.stringify([...existing, cartItem]));
+            window.dispatchEvent(new Event('cartUpdated'));
+            window.location.href = '/cart';
           }}
           aria-label={`Mua ngay ${name}`}
         >
-          <BoltIcon /> Mua ngay
+          <BoltIcon /> MUA NGAY
         </button>
       </div>
     </div>

@@ -180,9 +180,9 @@ export default function Auth() {
         }
       }
       if (!foundUser) {
-        setError('Email không tồn tại trong hệ thống.');
+        setError('Email không tồn tại trong hệ thống!');
       } else {
-        setSuccess('✅ Đã gửi liên kết khôi phục đến Email của bạn. Vui lòng kiểm tra hộp thư.');
+        setSuccess('✅ Đã gửi hướng dẫn khôi phục về Gmail của bạn!');
       }
       return;
     }
@@ -343,29 +343,33 @@ export default function Auth() {
           {/* ── Form ── */}
           {isForgotPassword ? (
             <form className="auth-form" onSubmit={handleSubmit} noValidate>
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-email">
-                  Nhập Email của bạn <span className="auth-required">*</span>
-                </label>
-                <div className="auth-input-wrap">
-                  <span className="auth-input-icon"><MailIcon /></span>
-                  <input
-                    id="auth-email"
-                    type="email"
-                    name="email"
-                    className="auth-input"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-              <button type="submit" className="auth-submit-btn" style={{ marginBottom: '12px' }}>
-                Gửi yêu cầu
-              </button>
-              <button type="button" className="auth-submit-btn" style={{ background: '#333', color: '#fff' }} onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); }}>
-                Quay lại đăng nhập
+              {!success && (
+                <>
+                  <div className="auth-field">
+                    <label className="auth-label" htmlFor="auth-email">
+                      Nhập Email của bạn <span className="auth-required">*</span>
+                    </label>
+                    <div className="auth-input-wrap">
+                      <span className="auth-input-icon"><MailIcon /></span>
+                      <input
+                        id="auth-email"
+                        type="email"
+                        name="email"
+                        className="auth-input"
+                        placeholder="Email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="auth-submit-btn" style={{ marginBottom: '12px' }}>
+                    Gửi yêu cầu
+                  </button>
+                </>
+              )}
+              <button type="button" className="auth-submit-btn" style={{ background: '#333', color: '#fff' }} onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); setFormData(prev => ({ ...prev, email: '' })); }}>
+                Quay lại Đăng nhập
               </button>
             </form>
           ) : (

@@ -436,33 +436,35 @@
   background: #222222;
 }
 
-/* ── Cart Row (Xsport: quantity + add-to-cart inline) ──── */
-.pd-cart-row {
+/* ── Quantity Row ────────────────────────────────────────── */
+.pd-quantity-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.pd-cart-row .pd-quantity__controls {
-  flex-shrink: 0;
-}
-
-.pd-cart-row .pd-actions__btn--outline {
-  flex: 1;
+.pd-quantity-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-main, #000000);
+  white-space: nowrap;
 }
 
 .pd-quantity__controls {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   border: 1.5px solid #d0d0d0;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .pd-quantity__btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: #ffffff;
   color: #333333;
@@ -474,17 +476,17 @@
 }
 
 .pd-quantity__btn:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: #f5f5f5;
   color: #000000;
 }
 
 .pd-quantity__btn:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .pd-quantity__value {
-  width: 50px;
+  width: 48px;
   text-align: center;
   font-size: 15px;
   font-weight: 700;
@@ -492,89 +494,125 @@
   user-select: none;
   border-left: 1.5px solid #d0d0d0;
   border-right: 1.5px solid #d0d0d0;
-  height: 44px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* ── Action Buttons ────────────────────────────────────────── */
-.pd-actions {
+/* ── CTA Button Row (side-by-side) ───────────────────────── */
+.pd-cta-row {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.pd-actions__btn {
-  width: 100%;
+.pd-cta-btn {
+  flex: 1;
   height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   font-family: var(--font-family, 'Mulish', sans-serif);
-  letter-spacing: 0.8px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
-.pd-actions__btn::after {
+.pd-cta-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Shimmer light sweep on hover ── */
+.pd-cta-btn::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     120deg,
     transparent 30%,
-    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.18) 50%,
     transparent 70%
   );
   transform: translateX(-100%);
   transition: transform 0.6s ease;
+  pointer-events: none;
 }
 
-.pd-actions__btn:hover::after {
+.pd-cta-btn:hover::after {
   transform: translateX(100%);
 }
 
-/* Outline style – Add to Cart */
-.pd-actions__btn--outline {
-  border: 2px solid #000000;
+/* ── Add to Cart (outline) ── */
+.pd-cta-btn--cart {
+  border: 2px solid #0f172a;
   background: #ffffff;
-  color: #000000;
+  color: #0f172a;
 }
 
-.pd-actions__btn--outline:hover {
-  background: #f5f5f5;
-}
-
-.pd-actions__btn--added {
-  border-color: #28a745;
-  color: #28a745;
-  background: #f0fff4;
-}
-
-/* Primary style – Buy Now */
-.pd-actions__btn--primary {
-  border: 2px solid #000000;
-  background: #000000;
+.pd-cta-btn--cart:hover {
+  background: #0f172a;
   color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
 }
 
-.pd-actions__btn--primary:hover {
-  background: #222222;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transform: translateY(-1px);
+.pd-cta-btn--cart:hover svg {
+  stroke: #ffffff;
 }
 
-.pd-actions__btn--primary:active {
+.pd-cta-btn--cart:active {
   transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+
+/* ── Added success state ── */
+.pd-cta-btn--added {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.pd-cta-btn--added svg {
+  stroke: #16a34a;
+}
+
+.pd-cta-btn--added:hover {
+  background: #dcfce7;
+  color: #15803d;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Buy Now (primary) ── */
+.pd-cta-btn--buy {
+  border: 2px solid #ffb800;
+  background: linear-gradient(135deg, #ffca28, #ffb800);
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.pd-cta-btn--buy:hover {
+  background: linear-gradient(135deg, #ffd54f, #ffca28);
+  border-color: #e6a600;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 184, 0, 0.35);
+}
+
+.pd-cta-btn--buy:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(255, 184, 0, 0.25);
 }
 
 /* ── Quick Actions (Share, Wishlist) ───────────────────────── */

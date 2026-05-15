@@ -12,6 +12,8 @@ import CategoryPage from '../pages/Category/Category';
 import NotFound from '../pages/NotFound';
 import MainLayout from '../components/layout/MainLayout';
 import AdminLayout from '../pages/Admin/AdminLayout';
+import StaticInfoPage from '../pages/StaticInfo/StaticInfoPage';
+import { staticPages } from '../pages/StaticInfo/staticContent';
 
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('xsport_user') || 'null');
@@ -71,6 +73,15 @@ export default function AppRoutes() {
               <Route path="/sport/tennis" element={<CategoryPage categoryType="sport" categoryValue="tennis" pageTitle="TENNIS" />} />
               <Route path="/sport/golf" element={<CategoryPage categoryType="sport" categoryValue="golf" pageTitle="GOLF" />} />
 
+              {/* ── Static Info Pages (Policies, Guides) ─────────── */}
+              {Object.entries(staticPages).map(([slug, page]) => (
+                <Route
+                  key={slug}
+                  path={`/${slug}`}
+                  element={<StaticInfoPage title={page.title} content={page.content} />}
+                />
+              ))}
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </MainLayout>
@@ -79,4 +90,3 @@ export default function AppRoutes() {
     </Router>
   );
 }
-

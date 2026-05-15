@@ -57,7 +57,7 @@ const AdminDashboard = () => {
     setMetrics({
       totalRevenue: revenue,
       newOrders: orders.length,
-      activeCustomers: uniqueCustomers.size || 1245 // Fallback to mock if empty to look good
+      activeCustomers: uniqueCustomers.size
     });
 
     // Recent 3 orders

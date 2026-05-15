@@ -46,6 +46,12 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState('');
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
 
   const loadOrders = () => {
     const storedOrders = localStorage.getItem('xsport_orders');
@@ -83,6 +89,7 @@ const AdminOrders = () => {
     
     // 5. Fire global event for other tabs (Customer Account Page)
     window.dispatchEvent(new Event('xsportDataUpdated'));
+    showToast('✅ Cập nhật trạng thái thành công!');
   };
 
   const handleDelete = (orderId) => {
@@ -91,6 +98,7 @@ const AdminOrders = () => {
       setOrders(updatedOrders);
       localStorage.setItem('xsport_orders', JSON.stringify(updatedOrders));
       window.dispatchEvent(new Event('xsportDataUpdated'));
+      showToast('✅ Đã xóa đơn hàng thành công!');
     }
   };
 
@@ -131,6 +139,8 @@ const AdminOrders = () => {
 
   return (
     <div className="admin-orders-container">
+      {/* Toast */}
+      {toast && <div className="admin-toast">{toast}</div>}
       <div className="orders-table-wrapper">
         <table className="orders-table">
           <thead>
@@ -181,14 +191,14 @@ const AdminOrders = () => {
                       <div className={`status-select-container ${getStatusClass(order.status || 'Chờ xác nhận')}`}>
                         <select 
                           className={`status-select ${getStatusClass(order.status || 'Chờ xác nhận')}`}
-                          value={order.status || '⏳ Chờ xác nhận'}
+                          value={order.status || 'Chờ xác nhận'}
                           onChange={(e) => handleStatusChange(order.id, e.target.value)}
                         >
-                          <option value="⏳ Chờ xác nhận">⏳ Chờ xác nhận</option>
-                          <option value="📦 Đã xác nhận">📦 Đã xác nhận</option>
-                          <option value="🚚 Đang giao hàng">🚚 Đang giao hàng</option>
-                          <option value="✔️ Hoàn thành">✔️ Hoàn thành</option>
-                          <option value="❌ Hủy">❌ Hủy</option>
+                          <option value="Chờ xác nhận">⏳ Chờ xác nhận</option>
+                          <option value="Đã xác nhận">📦 Đã xác nhận</option>
+                          <option value="Đang giao hàng">🚚 Đang giao hàng</option>
+                          <option value="Hoàn thành">✔️ Hoàn thành</option>
+                          <option value="Hủy">❌ Hủy</option>
                         </select>
                       </div>
                     </td>

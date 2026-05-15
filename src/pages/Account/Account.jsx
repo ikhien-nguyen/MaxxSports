@@ -197,15 +197,14 @@ const SEED_ORDERS = [
   },
 ];
 
-/* ── Helper: load orders and filter by user ── */
+/* ── Helper: load orders and filter by current user (STRICT ISOLATION) ── */
 function loadOrders(userEmail) {
   try {
-    const stored = JSON.parse(localStorage.getItem('xsport_orders') || '[]');
-    let merged = stored;
-    if (userEmail) {
-      merged = stored.filter(o => o.email === userEmail || o.customerName === userEmail);
-    }
-    return merged;
+    const allOrders = JSON.parse(localStorage.getItem('xsport_orders') || '[]');
+    if (!userEmail) return [];
+    /* Imperative filter: only show orders belonging to this user */
+    const myOrders = allOrders.filter(order => order.customerEmail === userEmail || order.email === userEmail);
+    return myOrders;
   } catch {
     return [];
   }

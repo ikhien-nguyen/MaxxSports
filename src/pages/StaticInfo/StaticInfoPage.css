@@ -1,0 +1,21 @@
+.sip-page { background: #fff; width: 100%; }
+.sip-breadcrumb { background: #f9f9f9; border-bottom: 1px solid #eee; padding: 15px 0; }
+.sip-breadcrumb__inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; font-size: 14px; color: #666; display: flex; align-items: center; gap: 8px; }
+.sip-breadcrumb__link { color: #333; text-decoration: none; transition: color .2s; }
+.sip-breadcrumb__link:hover { color: #ffb800; }
+.sip-breadcrumb__sep { color: #ccc; }
+.sip-breadcrumb__current { color: #999; }
+.sip-container { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+.sip-title { font-size: 28px; font-weight: 700; color: #1a1a1a; margin: 0 0 32px; letter-spacing: .5px; padding-bottom: 16px; border-bottom: 3px solid #ffb800; display: inline-block; }
+.sip-content h2 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 32px 0 12px; }
+.sip-content h3 { font-size: 17px; font-weight: 700; color: #333; margin: 24px 0 8px; }
+.sip-content p { font-size: 15px; line-height: 1.75; color: #444; margin: 0 0 16px; }
+.sip-content ul, .sip-content ol { padding-left: 24px; margin: 0 0 16px; }
+.sip-content li { font-size: 15px; line-height: 1.75; color: #444; margin-bottom: 6px; }
+.sip-content strong { color: #1a1a1a; }
+.sip-content table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+.sip-content th { background: #f8f8f8; padding: 10px 14px; text-align: left; border: 1px solid #eee; font-weight: 700; color: #333; }
+.sip-content td { padding: 10px 14px; border: 1px solid #eee; color: #555; }
+.sip-content .info-box { background: #fffdf5; border-left: 4px solid #ffb800; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; }
+.sip-content .info-box p { margin: 0; color: #333; }
+@media (max-width: 768px) { .sip-container { padding: 32px 16px 60px; } .sip-title { font-size: 22px; } }

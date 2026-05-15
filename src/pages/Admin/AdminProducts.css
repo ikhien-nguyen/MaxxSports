@@ -16,19 +16,21 @@
   background-color: #ffb800;
   color: #0f172a;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 10px 22px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .add-product-btn:hover {
   background-color: #e6a600;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 184, 0, 0.3);
 }
 
 .products-table-wrapper {
@@ -107,45 +109,103 @@
 
 .action-btns {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
 }
 
 .action-btn {
   background: none;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .action-btn svg {
   stroke: #64748b;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  transition: stroke 0.2s;
 }
+
+.action-btn.edit-btn {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+.action-btn.edit-btn svg { stroke: #2563eb; }
 
 .action-btn.edit-btn:hover {
-  background-color: #e0f2fe;
+  background: #dbeafe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
 }
 
-.action-btn.edit-btn:hover svg {
-  stroke: #0284c7;
+.action-btn.delete-btn {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
+
+.action-btn.delete-btn svg { stroke: #dc2626; }
 
 .action-btn.delete-btn:hover {
-  background-color: #fee2e2;
+  background: #fee2e2;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
 }
 
-.action-btn.delete-btn:hover svg {
-  stroke: #ef4444;
+.action-btn.view-btn {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #16a34a;
 }
 
-/* Modal Overlay */
+.action-btn.view-btn svg { stroke: #16a34a; }
+
+.action-btn.view-btn:hover {
+  background: #dcfce7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.15);
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+}
+
+/* ── Admin Toast Notification ────────────────────────────── */
+.admin-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-left: 4px solid #22c55e;
+  animation: toastSlideIn 0.3s ease;
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .product-modal-overlay {
   position: fixed;
   top: 0;

@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { categoryProducts } from '../../data/categoryData';
+import { formatPrice } from '../../data/productDetailData';
 import './Header.css';
 
 /* ── Nav data ──────────────────────────────────────────────── */
@@ -52,7 +54,7 @@ const CartIcon = () => (
 );
 
 const SearchIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2.5"
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
     strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.35-4.35" />
@@ -105,12 +107,27 @@ const LogoutIcon = () => (
   </svg>
 );
 
+/* ── Helper: parse price from string like "1.050.000₫" → number ── */
+function parseNumericPrice(price) {
+  if (typeof price === 'number') return price;
+  if (typeof price === 'string') {
+    return parseInt(price.replace(/[^\d]/g, ''), 10) || 0;
+  }
+  return 0;
+}
+
 /* ── Component ──────────────────────────────────────────────── */
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  /* ── SEARCH STATE ──────────────────────────────────────────── */
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const searchRef = useRef(null);
 
   /* ── Load user from localStorage on mount ──────────────────── */
   useEffect(() => {
@@ -152,6 +169,62 @@ export default function Header() {
     return () => document.removeEventListener('click', handleClick);
   }, [userDropdownOpen]);
 
+  /* ── Close search dropdown on outside click ───────────────── */
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  /* ── SEARCH ALGORITHM: Imperative filter on every keystroke ── */
+  useEffect(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (query.length === 0) {
+      setSuggestions([]);
+      return;
+    }
+
+    /* 1. Fetch products from localStorage (future backend)
+       Fallback to static categoryProducts from data file */
+    let allProducts = [];
+    try {
+      const stored = localStorage.getItem('xsport_products');
+      if (stored) {
+        allProducts = JSON.parse(stored);
+      }
+    } catch { /* ignore */ }
+
+    /* If localStorage is empty, use imported static data */
+    if (allProducts.length === 0) {
+      allProducts = categoryProducts;
+    }
+
+    /* 2. Imperative filter: name.toLowerCase().includes(query) */
+    const matched = [];
+    for (let i = 0; i < allProducts.length; i++) {
+      const product = allProducts[i];
+      if (product.name && product.name.toLowerCase().includes(query)) {
+        matched.push(product);
+      }
+      /* 3. Limit to Top 5 */
+      if (matched.length >= 5) break;
+    }
+
+    setSuggestions(matched);
+  }, [searchQuery]);
+
+  /* ── Handle suggestion click → navigate ────────────────────── */
+  const handleSuggestionClick = (product) => {
+    setSearchQuery('');
+    setSuggestions([]);
+    setIsFocused(false);
+    window.location.href = `/product/${product.id}`;
+  };
+
   /* ── Logout handler: backup cart → clear → remove user ────── */
   const handleLogout = () => {
     if (currentUser?.email) {
@@ -169,6 +242,9 @@ export default function Header() {
     setUserDropdownOpen(false);
     window.location.href = '/';
   };
+
+  /* Show dropdown if focused AND (has query text) */
+  const showSuggestions = isFocused && searchQuery.trim().length > 0;
 
   return (
     <header className="header-outer">
@@ -229,17 +305,67 @@ export default function Header() {
 
         {/* RIGHT ZONE — Actions */}
         <div className="header-right">
-          {/* Search pill */}
-          <div className="search-pill">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Tìm kiếm..."
-              aria-label="Tìm kiếm sản phẩm"
-            />
+          {/* Search pill with auto-suggest */}
+          <div className="search-pill" ref={searchRef} id="header-search">
             <span className="search-icon-wrap">
               <SearchIcon />
             </span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Tìm kiếm sản phẩm..."
+              aria-label="Tìm kiếm sản phẩm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              id="search-input"
+              autoComplete="off"
+            />
+
+            {/* ── Search Suggestions Dropdown ── */}
+            {showSuggestions && (
+              <div className="search-dropdown" id="search-suggestions">
+                {suggestions.length > 0 ? (
+                  suggestions.map((product) => {
+                    const numericPrice = parseNumericPrice(product.price || product.currentPrice || 0);
+                    return (
+                      <button
+                        type="button"
+                        key={product.id}
+                        className="search-dropdown__item"
+                        onClick={() => handleSuggestionClick(product)}
+                        id={`suggestion-${product.id}`}
+                      >
+                        <div className="search-dropdown__thumb">
+                          <img
+                            src={product.image || 'https://placehold.co/60x60/f5f5f5/999?text=SP'}
+                            alt={product.name}
+                            loading="lazy"
+                            onError={(e) => { e.target.src = 'https://placehold.co/60x60/f5f5f5/999?text=SP'; }}
+                          />
+                        </div>
+                        <div className="search-dropdown__info">
+                          <span className="search-dropdown__name">{product.name}</span>
+                          <span className="search-dropdown__price">
+                            {numericPrice > 0 ? formatPrice(numericPrice) : (product.price || product.currentPrice || '')}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="search-dropdown__empty" id="search-no-results">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.35-4.35" />
+                      <line x1="8" y1="8" x2="14" y2="14" />
+                    </svg>
+                    <span>Không tìm thấy sản phẩm</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* User — Auth-aware dropdown or link */}

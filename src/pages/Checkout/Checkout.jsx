@@ -205,14 +205,23 @@ export default function Checkout() {
     const newOrder = {
       id: orderId,
       date: dateStr,
+      customerEmail: form.email,
+      customerName: form.name,
+      email: form.email,
+      phone: form.phone,
       items: cartItems.map(item => ({
         name: item.name,
+        image: item.image || item.images?.[0] || '',
         qty: item.quantity || 1,
+        quantity: item.quantity || 1,
         price: parseNumericPrice(item.price),
       })),
       total: totalPrice,
+      totalAmount: totalPrice,
       status: 'Chờ xác nhận',
-      payment: paymentMethod === 'vnpay' ? 'VNPAY QR' : 'COD',
+      paymentMethod: paymentMethod === 'vnpay' ? 'VNPAY QR' : 'COD',
+      address: [form.address, form.ward, form.district, form.city].filter(Boolean).join(', '),
+      note: form.note || '',
       shipping: {
         name: form.name,
         phone: form.phone,
@@ -235,7 +244,7 @@ export default function Checkout() {
     // Clear cart
     localStorage.setItem('xsport_cart', '[]');
     window.dispatchEvent(new Event('cartUpdated'));
-    window.dispatchEvent(new Event('systemDataUpdated'));
+    window.dispatchEvent(new Event('xsportDataUpdated'));
   };
 
   /* ── Submit order ── */

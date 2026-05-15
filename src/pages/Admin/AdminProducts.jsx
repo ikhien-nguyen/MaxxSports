@@ -56,6 +56,12 @@ const AdminProducts = () => {
     stock: '',
     image: ''
   });
+  const [toast, setToast] = useState('');
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
 
   const loadData = () => {
     // Load products
@@ -144,6 +150,7 @@ const AdminProducts = () => {
     setProducts(updatedProducts);
     localStorage.setItem('xsport_products', JSON.stringify(updatedProducts));
     window.dispatchEvent(new Event('xsportDataUpdated'));
+    showToast(editingProduct ? '✅ Cập nhật sản phẩm thành công!' : '✅ Thêm sản phẩm mới thành công!');
     handleCloseModal();
   };
 
@@ -153,6 +160,7 @@ const AdminProducts = () => {
       setProducts(updatedProducts);
       localStorage.setItem('xsport_products', JSON.stringify(updatedProducts));
       window.dispatchEvent(new Event('xsportDataUpdated'));
+      showToast('✅ Đã xóa sản phẩm thành công!');
     }
   };
 
@@ -163,6 +171,8 @@ const AdminProducts = () => {
 
   return (
     <div className="admin-products-container">
+      {/* Toast */}
+      {toast && <div className="admin-toast">{toast}</div>}
       <div className="products-header-actions">
         <button className="add-product-btn" onClick={() => handleOpenModal()}>
           <PlusIcon />

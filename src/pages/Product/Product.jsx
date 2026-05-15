@@ -463,8 +463,9 @@ export default function Product() {
               </div>
             </div>
 
-            {/* Quantity + Add to Cart row (Xsport style) */}
-            <div className="pd-cart-row">
+            {/* ── Quantity Selector ── */}
+            <div className="pd-quantity-row">
+              <span className="pd-quantity-label">Số lượng:</span>
               <div className="pd-quantity__controls">
                 <button
                   type="button"
@@ -487,25 +488,27 @@ export default function Product() {
                   <PlusIcon />
                 </button>
               </div>
+            </div>
+
+            {/* ── CTA Buttons (side-by-side) ── */}
+            <div className="pd-cta-row">
               <button
                 type="button"
-                className={`pd-actions__btn pd-actions__btn--outline${addedToCart ? ' pd-actions__btn--added' : ''}`}
+                className={`pd-cta-btn pd-cta-btn--cart${addedToCart ? ' pd-cta-btn--added' : ''}`}
                 onClick={handleAddToCart}
                 id="add-to-cart-btn"
               >
-                {addedToCart ? 'ĐÃ THÊM VÀO GIỎ' : 'THÊM VÀO GIỎ'}
+                <CartIcon />
+                <span>{addedToCart ? 'ĐÃ THÊM ✓' : 'THÊM VÀO GIỎ'}</span>
               </button>
-            </div>
-
-            {/* Buy Now — full width */}
-            <div className="pd-actions">
               <button
                 type="button"
-                className="pd-actions__btn pd-actions__btn--primary"
+                className="pd-cta-btn pd-cta-btn--buy"
                 onClick={handleBuyNow}
                 id="buy-now-btn"
               >
-                MUA NGAY
+                <BoltIcon />
+                <span>MUA NGAY</span>
               </button>
             </div>
 
