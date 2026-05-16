@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -168,19 +169,26 @@ public class OrderService {
         return orderMapper.toResponse(order);
     }
 
-    public List<OrderResponse> getMyOrders(
-            String email
-    ) {
-
+    public List<OrderResponse> getMyOrders(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Không tìm thấy user"
-                        ));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         return orderRepository.findByUser(user)
                 .stream()
                 .map(orderMapper::toResponse)
                 .toList();
+    }
+
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream().map(orderMapper::toResponse).toList();
+    }
+
+    public String updateOrder(UpdateOrderRequest request) {
+        var order= orderRepository.findById(request.getId()).orElseThrow(()->new RuntimeException("Đơn hàng không tồn tại"));
+
+        order.setOrderStatus(request.getStatus());
+
+        orderRepository.save(order);
+        return "Cập nhập đơn hàng thành công";
     }
 }

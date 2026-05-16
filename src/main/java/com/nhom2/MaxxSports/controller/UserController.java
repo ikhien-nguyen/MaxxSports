@@ -28,6 +28,7 @@ public class UserController {
                 .result(userService.updateUser(request))
                 .build();
     }
+
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/getAllUsers")
     public ApiResponse<List<UserResponse>> getAllUser(){
@@ -43,6 +44,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/deleteUser/{id}")
     public void deleteUser(@PathVariable String id){
         log.info("Deleting user with id: " + id);
