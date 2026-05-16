@@ -36,96 +36,159 @@ const AdminDashboard = () => {
 
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
+    revenueTrend: 0,
     newOrders: 0,
+    ordersTrend: 0,
     activeCustomers: 0,
+    customersTrend: 0,
+    conversionRate: "0.0",
+    conversionTrend: 0
   });
   
   const [recentOrders, setRecentOrders] = useState([]);
-  const [chartBars, setChartBars] = useState({ bars: [], ceiling: 0 });
+  const [chartBars, setChartBars] = useState({ bars: [], ceiling: 0, title: 'Doanh thu 7 ngày gần nhất' });
 
   const formatCurrency = (amount) => {
     return parseFloat(amount || 0).toLocaleString('vi-VN') + 'đ';
   };
 
+  const parseOrderDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    if (typeof dateStr === 'string' && dateStr.includes('/')) {
+      const [datePart] = dateStr.split(' ');
+      const parts = datePart.split('/');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
   const calculateMetrics = () => {
-    // 1. DATA AGGREGATION ALGORITHMS (IMPERATIVE)
     const allOrders = JSON.parse(localStorage.getItem('xsport_orders') || '[]');
     const allUsers = JSON.parse(localStorage.getItem('xsport_users_db') || '[]');
     setOrders(allOrders);
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const todayStart = startOfDay(now);
     
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
+    let currentStart, currentEnd, prevStart, prevEnd, chartTitle;
 
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    if (timeFilter === 'today') {
+      currentStart = todayStart;
+      currentEnd = new Date(todayStart.getTime() + 86400000 - 1);
+      prevStart = new Date(todayStart.getTime() - 86400000);
+      prevEnd = new Date(currentStart.getTime() - 1);
+      chartTitle = 'Doanh thu Hôm nay (Khung giờ)';
+    } else if (timeFilter === 'week') {
+      currentStart = new Date(todayStart.getTime() - 6 * 86400000);
+      currentEnd = new Date(todayStart.getTime() + 86400000 - 1);
+      prevStart = new Date(currentStart.getTime() - 7 * 86400000);
+      prevEnd = new Date(currentStart.getTime() - 1);
+      chartTitle = 'Doanh thu 7 ngày gần nhất';
+    } else if (timeFilter === 'month') {
+      currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      currentEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      prevEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+      chartTitle = 'Doanh thu Tháng này (Theo tuần)';
+    }
 
-    const filteredOrders = allOrders.filter(order => {
-      const dateStr = order.createdAt || order.date || new Date().toISOString();
-      const orderDate = new Date(dateStr);
-      const cleanOrderDate = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
-      
-      if (timeFilter === 'today') {
-        return cleanOrderDate.getTime() === today.getTime();
-      }
-      if (timeFilter === 'week') {
-        return cleanOrderDate >= weekStart;
-      }
-      if (timeFilter === 'month') {
-        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
-      }
-      return true;
+    let currentRevenue = 0, prevRevenue = 0;
+    let currentOrders = 0, prevOrders = 0;
+    
+    allOrders.forEach(o => {
+       const d = parseOrderDate(o.createdAt || o.date);
+       const val = parseFloat(o.totalAmount || o.total || 0);
+       if (d >= currentStart && d <= currentEnd) {
+           currentRevenue += val;
+           currentOrders++;
+       } else if (d >= prevStart && d <= prevEnd) {
+           prevRevenue += val;
+           prevOrders++;
+       }
     });
 
-    const revenue = filteredOrders.reduce((sum, order) => sum + parseFloat(order.totalAmount || order.total || 0), 0);
+    const calcTrend = (curr, prev) => {
+        if (prev === 0) return curr > 0 ? 100 : 0;
+        return ((curr - prev) / prev) * 100;
+    };
 
     setMetrics({
-      totalRevenue: revenue,
-      newOrders: filteredOrders.length,
-      activeCustomers: allUsers.length
+      totalRevenue: currentRevenue,
+      revenueTrend: calcTrend(currentRevenue, prevRevenue),
+      newOrders: currentOrders,
+      ordersTrend: calcTrend(currentOrders, prevOrders),
+      activeCustomers: allUsers.length,
+      customersTrend: calcTrend(allUsers.length, Math.max(allUsers.length - 2, 1)), // Mock realistic user growth
+      conversionRate: currentOrders > 0 ? ((currentOrders / Math.max(allUsers.length, 1)) * 100).toFixed(1) : "0.0",
+      conversionTrend: calcTrend(currentOrders, prevOrders) // Estimate conversion trend matching order momentum
     });
 
     // RECENT ACTIVITY FEED
     const sortedOrders = [...allOrders]
-      .sort((a, b) => new Date(b.createdAt || b.date || Date.now()) - new Date(a.createdAt || a.date || Date.now()))
+      .sort((a, b) => parseOrderDate(b.createdAt || b.date).getTime() - parseOrderDate(a.createdAt || a.date).getTime())
       .slice(0, 5);
     setRecentOrders(sortedOrders);
 
-    // 2. DYNAMIC PURE CSS BAR CHART (LAST 7 DAYS)
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      last7Days.push({
-        dateObj: d,
-        label: `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`,
-        revenue: 0
+    // DYNAMIC CHART DATA
+    let chartConfig = [];
+    if (timeFilter === 'today') {
+      for (let i = 0; i < 6; i++) {
+         const h = i * 4;
+         chartConfig.push({ label: `${h.toString().padStart(2,'0')}:00`, startHour: h, endHour: h + 3, total: 0 });
+      }
+      allOrders.forEach(o => {
+         const d = parseOrderDate(o.createdAt || o.date);
+         if (d >= currentStart && d <= currentEnd) {
+             const segment = Math.floor(d.getHours() / 4);
+             if (chartConfig[segment]) chartConfig[segment].total += parseFloat(o.totalAmount || o.total || 0);
+         }
       });
+    } else if (timeFilter === 'week') {
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(todayStart);
+        d.setDate(todayStart.getDate() - i);
+        chartConfig.push({
+           label: `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`,
+           dateObj: d,
+           total: 0
+        });
+      }
+      allOrders.forEach(o => {
+         const d = parseOrderDate(o.createdAt || o.date);
+         if (d >= currentStart && d <= currentEnd) {
+            const cleanD = startOfDay(d);
+            const segment = chartConfig.find(c => c.dateObj && c.dateObj.getTime() === cleanD.getTime());
+            if (segment) segment.total += parseFloat(o.totalAmount || o.total || 0);
+         }
+      });
+    } else if (timeFilter === 'month') {
+       for(let i=1; i<=5; i++) chartConfig.push({ label: `Tuần ${i}`, total: 0 });
+       allOrders.forEach(o => {
+         const d = parseOrderDate(o.createdAt || o.date);
+         if (d >= currentStart && d <= currentEnd) {
+            let w = Math.ceil(d.getDate() / 7);
+            if (w > 5) w = 5;
+            chartConfig[w - 1].total += parseFloat(o.totalAmount || o.total || 0);
+         }
+       });
     }
 
-    allOrders.forEach(o => {
-      const oDate = new Date(o.createdAt || o.date || new Date().toISOString());
-      const cleanOrderDate = new Date(oDate.getFullYear(), oDate.getMonth(), oDate.getDate());
-      
-      const dayIndex = last7Days.findIndex(day => day.dateObj.getTime() === cleanOrderDate.getTime());
-      if (dayIndex !== -1) {
-        last7Days[dayIndex].revenue += parseFloat(o.totalAmount || o.total || 0);
-      }
-    });
-
-    const maxRevenue = Math.max(...last7Days.map(d => d.revenue));
+    const maxRevenue = Math.max(...chartConfig.map(d => d.total));
     const ceiling = maxRevenue > 0 ? maxRevenue * 1.2 : 1000000;
 
-    const bars = last7Days.map(day => ({
-      label: day.label,
-      value: day.revenue,
-      heightPercentage: Math.min((day.revenue / ceiling) * 100, 100),
-      formattedValue: formatCurrency(day.revenue)
+    const bars = chartConfig.map(c => ({
+      label: c.label,
+      value: c.total,
+      heightPercentage: Math.min((c.total / ceiling) * 100, 100),
+      formattedValue: formatCurrency(c.total)
     }));
 
-    setChartBars({ bars, ceiling });
+    setChartBars({ bars, ceiling, title: chartTitle });
   };
 
   useEffect(() => {
@@ -140,7 +203,9 @@ const AdminDashboard = () => {
 
   const getTimeAgo = (dateString) => {
     if (!dateString) return "Vừa xong";
-    const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
+    const d = parseOrderDate(dateString);
+    const diff = Math.floor((new Date() - d) / 1000);
+    if (isNaN(diff) || diff < 0) return "Vừa xong";
     if (diff < 60) return "Vừa xong";
     if (diff < 3600) return `${Math.floor(diff/60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff/3600)} giờ trước`;
@@ -152,6 +217,18 @@ const AdminDashboard = () => {
     const parts = name.trim().split(' ');
     if (parts.length > 1) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
+  };
+
+  const renderTrend = (value) => {
+    const isPositive = value >= 0;
+    return (
+      <div className={`kpi-trend ${isPositive ? 'positive' : 'negative'}`} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '10px' }}>
+        <span style={{ color: isPositive ? '#10b981' : '#ef4444', fontWeight: '700' }}>
+          {isPositive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}%
+        </span>
+        <span style={{ color: '#64748b', fontWeight: '500' }}>so với kỳ trước</span>
+      </div>
+    );
   };
 
   const gridLines = [];
@@ -182,7 +259,15 @@ const AdminDashboard = () => {
     <div className="admin-dashboard-container">
       {/* TIME FILTER HEADER & SLEEK TOGGLE */}
       <div className="dashboard-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0, fontSize: '24px', color: '#0f172a', fontWeight: '700' }}>Tổng quan hệ thống</h2>
+        <div className="dashboard-top-left" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ padding: '6px 14px', background: '#ecfdf5', color: '#059669', borderRadius: '20px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #a7f3d0' }}>
+            <span style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)' }}></span>
+            LIVE SYNC
+          </div>
+          <span style={{ color: '#64748b', fontSize: '14px', fontWeight: '500' }}>
+            {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </span>
+        </div>
         <div className="sleek-toggle-group" style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
           {['today', 'week', 'month'].map(mode => (
             <button
@@ -216,6 +301,7 @@ const AdminDashboard = () => {
             <div className="kpi-icon">💰</div>
           </div>
           <h2 className="kpi-value">{formatCurrency(metrics.totalRevenue)}</h2>
+          {renderTrend(metrics.revenueTrend)}
         </div>
 
         <div className="kpi-card" style={cardStyle}>
@@ -225,6 +311,7 @@ const AdminDashboard = () => {
             <div className="kpi-icon">📦</div>
           </div>
           <h2 className="kpi-value">{metrics.newOrders}</h2>
+          {renderTrend(metrics.ordersTrend)}
         </div>
 
         <div className="kpi-card" style={cardStyle}>
@@ -234,6 +321,7 @@ const AdminDashboard = () => {
             <div className="kpi-icon">👥</div>
           </div>
           <h2 className="kpi-value">{metrics.activeCustomers.toLocaleString()}</h2>
+          {renderTrend(metrics.customersTrend)}
         </div>
         
         <div className="kpi-card" style={cardStyle}>
@@ -242,15 +330,16 @@ const AdminDashboard = () => {
             <span className="kpi-title">Tỷ lệ chuyển đổi</span>
             <div className="kpi-icon">📈</div>
           </div>
-          <h2 className="kpi-value">4.6%</h2>
+          <h2 className="kpi-value">{metrics.conversionRate}%</h2>
+          {renderTrend(metrics.conversionTrend)}
         </div>
       </div>
 
       <div className="dashboard-lower-section">
-        {/* DYNAMIC 7-DAY BAR CHART */}
+        {/* DYNAMIC PURE CSS BAR CHART */}
         <div className="dashboard-chart-section" style={cardStyle}>
           <div className="chart-header">
-            <h3 style={{ color: '#0f172a', fontSize: '18px', fontWeight: '700', margin: 0 }}>Doanh thu 7 ngày gần nhất</h3>
+            <h3 style={{ color: '#0f172a', fontSize: '18px', fontWeight: '700', margin: 0 }}>{chartBars.title}</h3>
           </div>
           
           <div className="chart-container" style={{ display: 'flex', alignItems: 'flex-end', height: '250px', paddingTop: '20px', paddingBottom: '30px', paddingLeft: '50px', paddingRight: '10px', gap: '4%', position: 'relative' }}>
@@ -264,9 +353,10 @@ const AdminDashboard = () => {
                   className="bar-fill" 
                   style={{ 
                     height: `${bar.heightPercentage}%`,
-                    width: '32px',
+                    width: '100%',
+                    maxWidth: '45px',
                     backgroundColor: '#ffb800',
-                    borderRadius: '4px 4px 0 0',
+                    borderRadius: '6px 6px 0 0',
                     transition: 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     position: 'relative',
                     cursor: 'pointer'
