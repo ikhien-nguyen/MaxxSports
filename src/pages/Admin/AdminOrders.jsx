@@ -43,7 +43,14 @@ const CalendarIcon = () => (
 );
 
 const AdminOrders = () => {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState(() => {
+    try {
+      const stored = localStorage.getItem('xsport_orders');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState('');

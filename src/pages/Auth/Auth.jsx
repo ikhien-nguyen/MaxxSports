@@ -182,7 +182,7 @@ export default function Auth() {
       if (!foundUser) {
         setError('Email không tồn tại trong hệ thống!');
       } else {
-        setSuccess('✅ Đã gửi hướng dẫn khôi phục về Gmail của bạn!');
+        setSuccess('✅ Đường dẫn đặt lại mật khẩu đã gửi về Gmail của bạn!');
       }
       return;
     }
@@ -364,12 +364,12 @@ export default function Auth() {
                     </div>
                   </div>
                   <button type="submit" className="auth-submit-btn" style={{ marginBottom: '12px' }}>
-                    Gửi yêu cầu
+                    Khôi phục mật khẩu
                   </button>
                 </>
               )}
               <button type="button" className="auth-submit-btn" style={{ background: '#333', color: '#fff' }} onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); setFormData(prev => ({ ...prev, email: '' })); }}>
-                Quay lại Đăng nhập
+                Quay lại đăng nhập
               </button>
             </form>
           ) : (

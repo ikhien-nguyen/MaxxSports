@@ -54,7 +54,9 @@ const AdminProducts = () => {
     category: '',
     price: '',
     stock: '',
-    image: ''
+    image: '',
+    colors: '',
+    sizes: ''
   });
   const [toast, setToast] = useState('');
 
@@ -103,7 +105,9 @@ const AdminProducts = () => {
         category: product.category,
         price: product.price,
         stock: product.stock,
-        image: product.image || ''
+        image: product.image || '',
+        colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
+        sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || '')
       });
     } else {
       setEditingProduct(null);
@@ -112,7 +116,9 @@ const AdminProducts = () => {
         category: categories.length > 0 ? categories[0].slug : '',
         price: '',
         stock: '',
-        image: ''
+        image: '',
+        colors: '',
+        sizes: ''
       });
     }
     setIsModalOpen(true);
@@ -130,19 +136,30 @@ const AdminProducts = () => {
       return;
     }
 
+    // IMPERATIVE DATA PROCESSING
+    const processedProduct = {
+      ...formData,
+      // Convert comma-separated string to an array, trim whitespace, and filter out empty strings
+      colors: formData.colors ? formData.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Mặc định'],
+      sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean) : ['Freesize'],
+      // Ensure price and stock are parsed as Numbers
+      price: Number(formData.price),
+      stock: Number(formData.stock)
+    };
+
     let updatedProducts;
 
     if (editingProduct) {
       updatedProducts = products.map(p => {
         if (p.id === editingProduct.id) {
-          return { ...p, ...formData };
+          return { ...p, ...processedProduct };
         }
         return p;
       });
     } else {
       const newProduct = {
         id: 'prod_' + Date.now(),
-        ...formData
+        ...processedProduct
       };
       updatedProducts = [...products, newProduct];
     }
@@ -286,6 +303,26 @@ const AdminProducts = () => {
                   value={formData.stock} 
                   onChange={(e) => setFormData({...formData, stock: e.target.value})}
                   placeholder="VD: 50"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Màu sắc (Cách nhau bằng dấu phẩy)</label>
+                <input 
+                  type="text" 
+                  value={formData.colors} 
+                  onChange={(e) => setFormData({...formData, colors: e.target.value})}
+                  placeholder="VD: Đen, Trắng, Đỏ"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Kích cỡ (Cách nhau bằng dấu phẩy)</label>
+                <input 
+                  type="text" 
+                  value={formData.sizes} 
+                  onChange={(e) => setFormData({...formData, sizes: e.target.value})}
+                  placeholder="VD: S, M, L, XL"
                 />
               </div>
 
