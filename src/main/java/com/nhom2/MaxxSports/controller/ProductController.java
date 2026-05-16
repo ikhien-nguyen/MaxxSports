@@ -22,7 +22,46 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> searchProducts(
+            @RequestParam String keyword
+    ) {
 
+        return ResponseEntity.ok(
+                productService.searchProducts(keyword)
+        );
+    }
+    @GetMapping("/category")
+    public ResponseEntity<List<ProductResponse>> filterByCategory(
+            @RequestParam String loaiSanPham
+    ) {
+
+        return ResponseEntity.ok(
+                productService.filterByCategory(loaiSanPham)
+        );
+    }
+    @GetMapping("/brand")
+    public ResponseEntity<List<ProductResponse>> filterByBrand(
+            @RequestParam String thuongHieu
+    ) {
+
+        return ResponseEntity.ok(
+                productService.filterByBrand(thuongHieu)
+        );
+    }
+    @GetMapping("/sort")
+    public ResponseEntity<List<ProductResponse>> sortByPrice(
+            @RequestParam String loaiSanPham,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+
+        return ResponseEntity.ok(
+                productService.sortByPrice(
+                        loaiSanPham,
+                        direction
+                )
+        );
+    }
     @GetMapping("/getProduct/{id}")
     public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));

@@ -15,6 +15,9 @@ public interface ProductDetailMapper {
 
     @Mapping(target = "size", source = "size.size")
     @Mapping(target = "mau", source = "mau.mau")
-    @Mapping(target = "image", ignore = true)
+    @Mapping(
+            target = "image",
+            expression = "java(productDetail.getImages() != null && !productDetail.getImages().isEmpty() ? productDetail.getImages().get(0).getUrl() : null)"
+    )
     ProductDetailResponse toResponse(ProductDetail productDetail);
 }
