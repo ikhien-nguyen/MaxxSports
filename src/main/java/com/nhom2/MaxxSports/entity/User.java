@@ -1,5 +1,6 @@
 package com.nhom2.MaxxSports.entity;
 
+import com.nhom2.MaxxSports.enums.Roles;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

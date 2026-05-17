@@ -3,40 +3,43 @@ package com.nhom2.MaxxSports.service;
 import com.nhom2.MaxxSports.dto.request.ProductRequest;
 import com.nhom2.MaxxSports.dto.response.ProductResponse;
 import com.nhom2.MaxxSports.entity.Product;
+import com.nhom2.MaxxSports.mapper.ProductMapper;
 import com.nhom2.MaxxSports.repository.ProductRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductService {
 
-    private final ProductRepository productRepository;
+    ProductRepository productRepository;
+    ProductMapper productMapper;
 
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll()
                 .stream()
-                .map(this::toResponse)
+                .map(productMapper::toProductResponse)
                 .toList();
     }
+
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        return toResponse(product);
+        return productMapper.toProductResponse(product);
     }
-    public ProductResponse createProduct(ProductRequest request) {
-        Product product = Product.builder()
-                .tenSanPham(request.getTenSanPham())
-                .moTa(request.getMoTa())
-                .thuongHieu(request.getThuongHieu())
-                .chatLieu(request.getChatLieu())
-                .loaiSanPham(request.getLoaiSanPham())
-                .gia(request.getGia())
-                .build();
 
-        return toResponse(productRepository.save(product));
+    public ProductResponse createProduct(ProductRequest request) {
+        Product product = productMapper.toProduct(request);
+
+        product = productRepository.save(product);
+
+        return productMapper.toProductResponse(product);
     }
 
     public ProductResponse updateProduct(Long id, ProductRequest request) {
@@ -44,28 +47,21 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
         product.setTenSanPham(request.getTenSanPham());
-        product.setMoTa(request.getMoTa());   // ✅ sửa ở đây
+        product.setMoTa(request.getMoTa());
         product.setThuongHieu(request.getThuongHieu());
         product.setChatLieu(request.getChatLieu());
         product.setLoaiSanPham(request.getLoaiSanPham());
         product.setGia(request.getGia());
 
-        return toResponse(productRepository.save(product));
+        product = productRepository.save(product);
+
+        return productMapper.toProductResponse(product);
     }
 
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
-    }
-
-    private ProductResponse toResponse(Product product) {
-        return ProductResponse.builder()
-                .maSanPham(product.getMaSanPham())
-                .tenSanPham(product.getTenSanPham())
-                .moTa(product.getMoTa())
-                .thuongHieu(product.getThuongHieu())
-                .chatLieu(product.getChatLieu())
-                .loaiSanPham(product.getLoaiSanPham())
-                .gia(product.getGia())
-                .build();
+        Product product = productRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Không tìm thấy sản phẩm"));
+        productRepository.delete(product);
     }
 }

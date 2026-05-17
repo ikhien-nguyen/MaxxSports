@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/xsports
     username: root
-    password: abc123
+    password: 123456
 
   jpa:
     hibernate:
@@ -23,3 +23,9 @@ cloudinary:
   cloud-name: "dlw2xyay8"
   api-key: "476555591589246"
   api-secret: "CLjF43GAPvQgE-E8nLm9f4tN0lQ"
+
+vnpay:
+  tmn-code: DEMOV210
+  hash-secret: YOUR_SECRET_KEY
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return-url: http://localhost:8080/api/payment/vnpay-return

@@ -1,4 +1,4 @@
-package com.nhom2.MaxxSports.entity;
+package com.nhom2.MaxxSports.enums;
 
 public enum Roles {
     ADMIN, USER;

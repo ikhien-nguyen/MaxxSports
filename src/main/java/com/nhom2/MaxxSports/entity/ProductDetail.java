@@ -3,6 +3,9 @@ package com.nhom2.MaxxSports.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,19 +22,24 @@ public class ProductDetail {
 
     @Column(name = "so_luong")
     private Integer soLuong;
-    // Nối với bảng Product
+
     @ManyToOne
     @JoinColumn(name = "ma_san_pham")
     private Product product;
 
-    // Nối với bảng Size
     @ManyToOne
     @JoinColumn(name = "ma_size")
     private Size size;
 
-    // Nối với bản g Màu
     @ManyToOne
     @JoinColumn(name = "ma_mau")
     private Mau mau;
 
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "productDetail",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER
+    )
+    private List<Images> images = new ArrayList<>();
 }

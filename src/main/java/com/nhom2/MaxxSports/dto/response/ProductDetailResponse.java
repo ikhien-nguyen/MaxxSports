@@ -11,21 +11,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductResponse {
+public class ProductDetailResponse {
 
-    Long maSanPham;
+    Long maCtsp;
 
-    String tenSanPham;
+    Integer soLuong;
 
-    String moTa;
+    String size;
 
-    String thuongHieu;
+    String mau;
 
-    String chatLieu;
-
-    String loaiSanPham;
-
-    Double gia;
-
-    List<ProductDetailResponse> productDetails;
+    String image;
 }
