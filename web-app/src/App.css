@@ -1,0 +1,62 @@
+/* App.css - Base application styles */
+
+/* Component styles are imported in their respective files */
+
+/* Utility classes */
+.container-inner,
+.inner-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.full-width {
+  width: 100%;
+  max-width: none;
+}
+
+/* Smooth transitions throughout the app */
+* {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-timing-function: var(--transition);
+  transition-duration: 0.2s;
+}
+
+/* Prevent double animations */
+button, a {
+  transition: var(--transition);
+}
+
+/* Ensure responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Better form styling */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input, textarea {
+  padding: 0.5rem;
+}
+
+/* Focus states for accessibility */
+:focus-visible {
+  outline: 2px solid var(--brand-yellow);
+  outline-offset: 2px;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--brand-yellow);
+  color: var(--bg-dark);
+}
+
+::-moz-selection {
+  background: var(--brand-yellow);
+  color: var(--bg-dark);
+}

@@ -1,11 +1,13 @@
 package com.nhom2.MaxxSports.entity;
 
-import com.nhom2.MaxxSports.enums.*;
+import com.nhom2.MaxxSports.enums.OrderStatus;
+import com.nhom2.MaxxSports.enums.ShippingMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -36,19 +38,22 @@ public class Order {
     @Enumerated(EnumType.STRING)
     ShippingMethod shippingMethod;
 
-//    @ManyToOne
-//    @JoinColumn(name = "ward_id")
-//    Ward ward;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     User user;
 
-    @OneToMany(mappedBy = "order",
-            cascade = CascadeType.ALL)
-    List<OrderDetail> orderDetails;
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    List<OrderDetail> orderDetails =
+            new ArrayList<>();
 
-//    @OneToOne(mappedBy = "order",
-//            cascade = CascadeType.ALL)
-//    Payment payment;
+    @OneToOne(
+            mappedBy = "order",
+            cascade = CascadeType.ALL
+    )
+    Payment payment;
 }

@@ -8,6 +8,7 @@ import com.nhom2.MaxxSports.mapper.OrderMapper;
 import com.nhom2.MaxxSports.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final UserRepository userRepository;
@@ -23,17 +25,11 @@ public class OrderService {
     private final ProductDetailRepository
             productDetailRepository;
 
-//    private final ProvinceRepository
-//            provinceRepository;
-//
-//    private final WardRepository
-//            wardRepository;
-
     private final OrderRepository
             orderRepository;
-//
-//    private final PaymentRepository
-//            paymentRepository;
+
+    private final PaymentRepository
+            paymentRepository;
 
     private final OrderMapper orderMapper;
 
@@ -43,56 +39,43 @@ public class OrderService {
             CheckoutRequest request
     ) {
 
+        log.info("Checkout");
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Bạn cần phải đăng nhập"
                         ));
-//
-//        Province province =
-//                provinceRepository.findById(
-//                        request.getProvinceId()
-//                ).orElseThrow(() ->
-//                        new RuntimeException(
-//                                "Province không tồn tại"
-//                        ));
-//
-//        Ward ward =
-//                wardRepository.findById(
-//                        request.getWardId()
-//                ).orElseThrow(() ->
-//                        new RuntimeException(
-//                                "Ward không tồn tại"
-//                        ));
-//
-//        if (!ward.getProvince().getId()
-//                .equals(province.getId())) {
-//
-//            throw new RuntimeException(
-//                    "Ward không thuộc province"
-//            );
-//        }
+
         Order order = Order.builder()
                 .orderDate(LocalDateTime.now())
                 .detailAddress(
                         request.getDetailAddress()
                 )
-//                .province(province)
-//                .ward(ward)
                 .user(user)
                 .orderStatus(
-                        OrderStatus.PENDING
+                        request.getPaymentMethod()
+                                == PaymentMethod.VNPAY
+                                ? OrderStatus.CHO_THANH_TOAN
+                                : OrderStatus.PENDING
                 )
                 .shippingMethod(
                         request.getShippingMethod()
                 )
                 .build();
+
         List<OrderDetail> orderDetails =
                 new ArrayList<>();
+
         int totalQuantity = 0;
+
         double totalPrice = 0;
-        for (CheckoutItemRequest item :
-                request.getItems()) {
+
+        for (
+                CheckoutItemRequest item
+                : request.getItems()
+        ) {
+
             ProductDetail productDetail =
                     productDetailRepository
                             .findById(
@@ -102,9 +85,22 @@ public class OrderService {
                                     new RuntimeException(
                                             "Sản phẩm không tồn tại"
                                     ));
+
+            // kiểm tra tồn kho
+            if (
+                    productDetail.getSoLuong()
+                            < item.getQuantity()
+            ) {
+
+                throw new RuntimeException(
+                        "Sản phẩm không đủ số lượng"
+                );
+            }
+
             double price =
                     productDetail.getProduct()
                             .getGia();
+
             double itemTotal =
                     price * item.getQuantity();
 
@@ -125,6 +121,15 @@ public class OrderService {
                     item.getQuantity();
 
             totalPrice += itemTotal;
+
+            // trừ số lượng tồn
+            productDetail.setSoLuong(
+                    productDetail.getSoLuong()
+                            - item.getQuantity()
+            );
+
+            productDetailRepository
+                    .save(productDetail);
         }
 
         order.setOrderDetails(orderDetails);
@@ -138,33 +143,25 @@ public class OrderService {
         );
 
         orderRepository.save(order);
-//
-//        Payment payment = Payment.builder()
-//                .order(order)
-//                .paymentMethod(
-//                        request.getPaymentMethod()
-//                )
-//                .paymentStatus(
-//                        request.getPaymentMethod()
-//                                == PaymentMethod.COD
-//                                ? PaymentStatus.PENDING
-//                                : PaymentStatus.PAID
-//                )
-//                .transactionCode(
-//                        UUID.randomUUID()
-//                                .toString()
-//                )
-//                .paidAt(
-//                        request.getPaymentMethod()
-//                                == PaymentMethod.COD
-//                                ? null
-//                                : LocalDateTime.now()
-//                )
-//                .build();
-//
-//        paymentRepository.save(payment);
-//
-//        order.setPayment(payment);
+
+        Payment payment = Payment.builder()
+                .order(order)
+                .amount(totalPrice)
+                .method(
+                        request.getPaymentMethod()
+                )
+                .status(
+                        PaymentStatus.PENDING
+                )
+                .transactionNo(
+                        UUID.randomUUID()
+                                .toString()
+                )
+                .build();
+
+        paymentRepository.save(payment);
+
+        order.setPayment(payment);
 
         return orderMapper.toResponse(order);
     }

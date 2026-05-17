@@ -26,6 +26,9 @@ public class OrderController {
 
     @PostMapping("/checkout")
     public ApiResponse<OrderResponse> checkout(@RequestBody CheckoutRequest request, Principal principal) {
+        System.out.println("CALL CONTROLLER");
+
+        System.out.println(principal);
         return ApiResponse
                 .<OrderResponse>builder()
                 .result(orderService.checkout(principal.getName(), request))
