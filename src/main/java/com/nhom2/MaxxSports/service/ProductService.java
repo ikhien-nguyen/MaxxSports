@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Sort;
 import java.util.List;
 
 @Service
@@ -26,8 +26,52 @@ public class ProductService {
                 .stream()
                 .map(productMapper::toProductResponse)
                 .toList();
+
     }
 
+    public List<ProductResponse> searchProducts(String keyword) {
+
+        return productRepository
+                .findByTenSanPhamContainingIgnoreCase(keyword)
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> filterByCategory(String loaiSanPham) {
+
+        return productRepository
+                .findByLoaiSanPhamIgnoreCase(loaiSanPham)
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+    public List<ProductResponse> filterByBrand(String thuongHieu) {
+
+        return productRepository
+                .findByThuongHieuIgnoreCase(thuongHieu)
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+    public List<ProductResponse> sortByPrice(
+            String loaiSanPham,
+            String sortDirection
+    ) {
+
+        Sort sort = sortDirection.equalsIgnoreCase("desc")
+                ? Sort.by("gia").descending()
+                : Sort.by("gia").ascending();
+
+        return productRepository
+                .findByLoaiSanPhamIgnoreCase(
+                        loaiSanPham,
+                        sort
+                )
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
