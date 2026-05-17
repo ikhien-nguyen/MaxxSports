@@ -23,7 +23,7 @@ public class UserController {
     UserService userService;
 
     @PostMapping("/update")
-    public ApiResponse<UpdateUserResponse> updateUser(UpdateUserRequest request) {
+    public ApiResponse<UpdateUserResponse> updateUser(@RequestBody UpdateUserRequest request) {
         return ApiResponse.<UpdateUserResponse>builder()
                 .result(userService.updateUser(request))
                 .build();

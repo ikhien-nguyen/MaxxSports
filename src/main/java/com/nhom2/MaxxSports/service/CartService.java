@@ -41,6 +41,16 @@ public class CartService {
 		// 4. Kiểm tra xem món đồ này ĐÃ CÓ trong giỏ hàng chưa
 		CartItem cartItem = cartItemRepository.findByCartAndProductDetail(cart, productDetail).orElse(null);
 
+		int soLuongMuonMua = request.getSoLuong();
+		if (cartItem != null) {
+			// Nếu đã có trong giỏ, số lượng muốn mua bằng số lượng cũ trong giỏ + số lượng muốn thêm mới
+			soLuongMuonMua += cartItem.getSoLuong();
+		}
+
+		if (soLuongMuonMua > productDetail.getSoLuong()) {
+			throw new RuntimeException("Số lượng vượt quá tồn kho");
+		}
+
 		if (cartItem != null) {
 			// Nếu có rồi -> Cộng dồn số lượng thêm
 			cartItem.setSoLuong(cartItem.getSoLuong() + request.getSoLuong());
@@ -125,6 +135,11 @@ public class CartService {
 		// Bảo mật: Kiểm tra xem món đồ này có đúng là nằm trong giỏ của người này không
 		if (!cartItem.getCart().getMaGioHang().equals(cart.getMaGioHang())) {
 			throw new RuntimeException("Bạn không có quyền sửa món đồ này");
+		}
+
+		ProductDetail productDetail = cartItem.getProductDetail();
+		if (newQuantity > productDetail.getSoLuong()) {
+			throw new RuntimeException("Số lượng vượt quá tồn kho");
 		}
 
 		// Cập nhật lại tổng số lượng của cả giỏ hàng (Trừ đi số cũ, cộng thêm số mới)
