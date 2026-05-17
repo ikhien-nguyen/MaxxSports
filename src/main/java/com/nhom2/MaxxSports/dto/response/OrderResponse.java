@@ -2,6 +2,8 @@ package com.nhom2.MaxxSports.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nhom2.MaxxSports.enums.OrderStatus;
+import com.nhom2.MaxxSports.enums.PaymentMethod;
+import com.nhom2.MaxxSports.enums.PaymentStatus;
 import com.nhom2.MaxxSports.enums.ShippingMethod;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -36,9 +38,9 @@ public class OrderResponse {
 
     ShippingMethod shippingMethod;
 
-//    PaymentMethod paymentMethod;
-//
-//    PaymentStatus paymentStatus;
+    PaymentMethod paymentMethod;
+
+    PaymentStatus paymentStatus;
 
     List<OrderItemResponse> items;
 }

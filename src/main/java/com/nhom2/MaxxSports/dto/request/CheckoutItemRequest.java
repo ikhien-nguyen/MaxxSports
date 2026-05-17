@@ -13,5 +13,6 @@ public class CheckoutItemRequest {
 
     Long productDetailId;
 
-    Integer quantity;
+    @Builder.Default
+    Integer quantity = 1;
 }

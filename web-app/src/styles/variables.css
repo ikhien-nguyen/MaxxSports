@@ -1,0 +1,70 @@
+/* ===========================================================
+   XSPORT DESIGN SYSTEM — Design Tokens
+   Source: Figma frame hXYy3Qzuyy36cHSx6mfEBJ-8-1687
+   =========================================================== */
+
+:root {
+  /* ── Xsport Brand Colors (from Figma) ─────────────────── */
+  --color-maxx-red: #df0000;          /* Product prices, discount badges */
+  --color-tab-active: #2d2d2d;        /* Active tab underline, button borders */
+  --color-brand-label: #979797;       /* Brand label text on product cards */
+  --color-tab-inactive: #9c9c9c;      /* Inactive tab text */
+  --color-price-strike: #666666;      /* Strikethrough original price */
+  --color-text-main: #000000;         /* Product names, main body text */
+  --color-text-excerpt: #333333;      /* Blog excerpt text */
+  --color-section-bg: #ffffff;        /* Section backgrounds */
+
+  /* ── Typography ──────────────────────────────────────────── */
+  --font-mulish: 'Mulish', sans-serif;
+  --font-family: 'Mulish', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  /* ── Legacy brand vars (Header/Footer) ───────────────────── */
+  --bg-dark: #151515;
+  --bg-darker: #0f0f0f;
+  --footer-bg: #2d2d2d;
+  --brand-yellow: #ffb800;
+  --brand-yellow-hover: #ffc24d;
+  --text-light: #f5f5f5;
+  --text-gray: #a0a0a0;
+  --border-dark: #333333;
+  --border-color: #333333;
+  --border-light: #e8e8e8;
+
+  /* ── Shadows ─────────────────────────────────────────────── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.18);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --shadow-hard: 0 20px 50px rgba(0, 0, 0, 0.25);
+
+  /* ── Transitions ─────────────────────────────────────────── */
+  --transition: all 0.3s ease;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s ease;
+
+  /* ── Spacing ─────────────────────────────────────────────── */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 10px;
+  --radius-full: 9999px;
+
+  /* ── Z-Index ─────────────────────────────────────────────── */
+  --z-dropdown: 50;
+  --z-sticky: 1000;
+  --z-modal: 1400;
+
+  /* ── Breakpoints (reference) ─────────────────────────────── */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 992px;
+  --bp-xl: 1280px;
+}

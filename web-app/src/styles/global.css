@@ -1,0 +1,145 @@
+/* ===========================================================
+   PREMIUM SPORTS E-COMMERCE - GLOBAL RESET & SYSTEM
+   100% Responsive, Unbreakable Design
+   =========================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--font-family);
+  background: #fff;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* ===========================================================
+   TYPOGRAPHY SYSTEM
+   =========================================================== */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+h1 { font-size: 3.5rem; }
+h2 { font-size: 2.5rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+p {
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--text-light);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+a:hover {
+  color: var(--brand-yellow);
+}
+
+/* ===========================================================
+   LAYOUT UTILITIES
+   =========================================================== */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.full-width {
+  width: 100%;
+  background-color: var(--bg-dark);
+  position: relative;
+  left: 0;
+  right: 0;
+}
+
+/* ===========================================================
+   SCROLLBAR STYLING
+   =========================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-yellow);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-yellow-hover);
+}
+
+/* ===========================================================
+   LAYOUT WRAPPERS - Header & Footer
+   =========================================================== */
+
+.outer-wrap {
+  width: 100%;
+  background: var(--bg-dark);
+}
+
+.inner-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ===========================================================
+   RESPONSIVE DESIGN
+   =========================================================== */
+
+@media (max-width: 1024px) {
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  .container {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1rem; }
+
+  .container {
+    padding: 0 12px;
+  }
+}

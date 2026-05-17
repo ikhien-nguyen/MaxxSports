@@ -25,7 +25,7 @@ cloudinary:
   api-secret: "CLjF43GAPvQgE-E8nLm9f4tN0lQ"
 
 vnpay:
-  tmn-code: DEMOV210
-  hash-secret: YOUR_SECRET_KEY
+  tmn-code: "8EM7MK9Z"
+  hash-secret: "RIUKGGS7LA415S2M27B662IVUAG7W6LD"
   pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   return-url: http://localhost:8080/api/payment/vnpay-return

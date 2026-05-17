@@ -16,50 +16,15 @@ public interface OrderMapper {
             source = "id"
     )
 
-//    @Mapping(
-//            target = "province",
-//            source = "province.name"
-//    )
-
-//    @Mapping(
-//            target = "ward",
-//            source = "ward.name"
-//    )
-
     @Mapping(
-            target = "detailAddress",
-            source = "detailAddress"
+            target = "paymentMethod",
+            source = "payment.method"
     )
 
     @Mapping(
-            target = "totalQuantity",
-            source = "totalQuantity"
+            target = "paymentStatus",
+            source = "payment.status"
     )
-
-    @Mapping(
-            target = "totalPrice",
-            source = "totalPrice"
-    )
-
-    @Mapping(
-            target = "orderStatus",
-            source = "orderStatus"
-    )
-
-    @Mapping(
-            target = "shippingMethod",
-            source = "shippingMethod"
-    )
-
-//    @Mapping(
-//            target = "paymentMethod",
-//            source = "payment.paymentMethod"
-//    )
-
-//    @Mapping(
-//            target = "paymentStatus",
-//            source = "payment.paymentStatus"
-//    )
 
     @Mapping(
             target = "items",

@@ -1,0 +1,314 @@
+/* d:\flie bài tập\MaxxSports-main\src\pages\Admin\AdminDashboard.css */
+.admin-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+/* KPI Cards */
+.kpi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.kpi-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-bg-icon {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 100px;
+  height: 100px;
+  opacity: 0.04;
+  color: #0f172a;
+  pointer-events: none;
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1;
+}
+
+.kpi-title {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-icon {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.kpi-value {
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  z-index: 1;
+}
+
+.kpi-trend {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 1;
+  font-weight: 500;
+}
+
+.kpi-trend.positive {
+  color: #10b981;
+}
+
+.kpi-trend.negative {
+  color: #ef4444;
+}
+
+.trend-text {
+  color: #64748b;
+  font-weight: 400;
+}
+
+/* Lower Section Grid */
+.dashboard-lower-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* Chart Section */
+.dashboard-chart-section {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.chart-header h3 {
+  color: #0f172a;
+  font-size: 18px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.chart-container {
+  height: 280px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 30px;
+  padding-top: 20px;
+  padding-left: 50px; /* Space for Y-axis labels */
+  padding-right: 10px;
+  gap: 8%;
+}
+
+/* Grid lines */
+.chart-grid-lines {
+  position: absolute;
+  top: 20px;
+  left: 50px;
+  right: 10px;
+  height: calc(100% - 50px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chart-grid-line {
+  width: 100%;
+  height: 1px;
+  border-bottom: 1px dashed #e2e8f0;
+  position: relative;
+}
+
+.grid-label {
+  position: absolute;
+  left: -45px;
+  top: -8px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Bars */
+.chart-bar-wrapper {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 2;
+  position: relative;
+}
+
+.bar-fill {
+  width: 100%;
+  max-width: 45px;
+  background-color: #ffb800;
+  border-radius: 6px 6px 0 0;
+  transition: all 0.3s ease-out;
+  position: relative;
+  cursor: pointer;
+}
+
+.bar-fill:hover {
+  background-color: #e6a600; /* Darker yellow */
+}
+
+.bar-label {
+  position: absolute;
+  bottom: -25px;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.bar-tooltip {
+  position: absolute;
+  top: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #0f172a;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.bar-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px 4px 0;
+  border-style: solid;
+  border-color: #0f172a transparent transparent transparent;
+}
+
+.bar-fill:hover .bar-tooltip {
+  opacity: 1;
+}
+
+/* Recent Activity Panel */
+.recent-activity-section {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.recent-activity-header h3 {
+  color: #0f172a;
+  font-size: 18px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex-grow: 1;
+}
+
+.activity-item {
+  display: flex;
+  gap: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activity-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #fffbeb;
+  color: #ffb800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activity-text {
+  font-size: 13px;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.activity-text strong {
+  font-weight: 600;
+}
+
+.activity-time {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.activity-empty {
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 0;
+}
