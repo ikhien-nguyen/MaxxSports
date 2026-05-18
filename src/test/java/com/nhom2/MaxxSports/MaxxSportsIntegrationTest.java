@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Transactional // Tự động xóa sạch dữ liệu mồi trong DB sau khi chạy xong mỗi test case
+@Transactional
 public class MaxxSportsIntegrationTest {
 
     @Autowired
@@ -34,7 +34,7 @@ public class MaxxSportsIntegrationTest {
     private ProductDetailRepository productDetailRepository;
 
     @Autowired
-    private ProductRepository productRepository; // Tiêm Repo này vào để mồi dữ liệu bảng SAN_PHAM
+    private ProductRepository productRepository;
 
     @Autowired
     private CartRepository cartRepository;
@@ -82,10 +82,9 @@ public class MaxxSportsIntegrationTest {
         testProduct.setMau(mau);
         productDetailRepository.save(testProduct);
 
-        entityManager.flush(); // Đẩy toàn bộ dữ liệu xuống DB thật ngay lập tức
-        entityManager.clear(); // Xóa sạch bộ nhớ đệm trong Java để ép nạp lại chuẩn
+        entityManager.flush();
+        entityManager.clear();
 
-        // Nạp lại đối tượng testProduct hoàn chỉnh từ DB sau khi đã clear cache
         testProduct = productDetailRepository.findById(testProduct.getMaCtsp()).orElseThrow();
     }
 

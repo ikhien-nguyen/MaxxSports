@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// 1. Cấu hình đường dẫn gốc (Tự động lấy từ file .env nếu có, nếu không sẽ dùng localhost làm dự phòng)
-const API_BASE_URL = import.meta.env.BASE_URL || 'http://localhost:8080/xsports/api';
+// 1. Cấu hình đường dẫn gốc (Bốc chuẩn từ file .env hoặc dùng dự phòng mặc định)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/xsports/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -29,19 +29,26 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Trường hợp token hết hạn hoặc không hợp lệ -> đá về trang đăng nhập
+        // Trường hợp token hết hạn hoặc không hợp lệ (401 Unauthorized)
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            // Kiểm tra tránh việc lặp vô hạn nếu đang ở chính trang login
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+            // Lấy ra URL của API vừa gọi bị dính lỗi
+            const requestUrl = error.config?.url || '';
+
+            // Đăng nhập lại nếu lỗi 401 này KHÔNG PHẢI xuất phát từ API đăng nhập
+            if (!requestUrl.includes('/auth/login')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('xsport_user'); // Xóa  session user cũ
+
+                if (!window.location.pathname.includes('/auth')) {
+                    window.location.href = '/auth';
+                }
             }
         }
 
         // Tối ưu hóa việc bóc tách thông điệp lỗi từ Spring Boot trả về
         let errorMessage = 'Có lỗi hệ thống xảy ra';
         if (error.response && error.response.data) {
-            // Nếu Backend trả về dạng Object chứa trường message, hoặc trả về chuỗi String thuần
+            // Nếu Backend trả về dạng Object chứa trường message (ApiResponse), hoặc chuỗi String thuần
             errorMessage = error.response.data.message || (typeof error.response.data === 'string' ? error.response.data : errorMessage);
         }
 

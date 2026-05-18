@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { categoryProducts } from '../../data/categoryData';
 import { formatPrice } from '../../data/productDetailData';
 import './Header.css';
+import {authService} from "../../services/authService.js";
 
 /* ── Nav data ──────────────────────────────────────────────── */
 const sportsCategories = [
@@ -226,7 +227,8 @@ export default function Header() {
   };
 
   /* ── Logout handler: backup cart → clear → remove user ────── */
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // 1. Sao lưu giỏ hàng của user hiện tại vào local trước khi xóa
     if (currentUser?.email) {
       try {
         const currentCart = localStorage.getItem('xsport_cart') || '[]';
@@ -234,13 +236,15 @@ export default function Header() {
       } catch { /* ignore */ }
     }
 
-    localStorage.setItem('xsport_cart', '[]');
-    localStorage.removeItem('xsport_user');
-    window.dispatchEvent(new Event('cartUpdated'));
+    await authService.logout();
 
+    // Cập nhật  các State tại chỗ để ẩn menu Avatar nhanh lập tức
     setCurrentUser(null);
     setUserDropdownOpen(false);
-    window.location.href = '/';
+    setIsMobileMenuOpen(false);
+
+    // 4. Điều hướng về trang auth
+    window.location.href = '/auth';
   };
 
   /* Show dropdown if focused AND (has query text) */

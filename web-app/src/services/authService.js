@@ -43,16 +43,17 @@ export const authService = {
      */
     logout: async () => {
         try {
-            // Gọi API logout ở Backend để đưa Token này vào danh sách đen (Blacklist)
-            // Request này bắt buộc phải truyền Header Authorization lên, api.js đã lo việc đó
             await api.post('/auth/logout');
         } catch (error) {
-            console.error('Lỗi khi gọi API logout ở Backend:', error);
+            console.error("Backend logout error:", error);
         } finally {
-            // Bất kể Backend có lỗi hay không, Frontend vẫn phải xóa sạch dấu vết Token ở Local
+            // Quét sạch dữ liệu ở máy khách, không cho token rác ở lại
             localStorage.removeItem('token');
-            // Đá người dùng về trang đăng nhập
-            window.location.href = '/login';
+            localStorage.removeItem('xsport_user');
+            localStorage.setItem('xsport_cart', '[]');
+
+            window.dispatchEvent(new Event('cartUpdated'));
+            window.dispatchEvent(new Event('xsportDataUpdated'));
         }
     }
 };

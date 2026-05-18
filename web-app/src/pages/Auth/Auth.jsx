@@ -1,90 +1,37 @@
 import { useState, useEffect } from 'react';
+import { authService } from '../../services/authService';
 import './Auth.css';
-
-/* ─────────────────────────────────────────────
-   MOCK DATABASE — Role-based users (Dynamic)
-───────────────────────────────────────────── */
 
 /* ─────────────────────────────────────────────
    INLINE SVG ICONS
 ───────────────────────────────────────────── */
 const EyeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
 );
-
 const EyeOffIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
-    <line x1="1" y1="1" x2="23" y2="23" />
-  </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
 );
-
 const MailIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-    <polyline points="22,6 12,13 2,6" />
-  </svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
 );
-
 const LockIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
 );
-
 const PersonIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
 );
-
 const PhoneIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-  </svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
 );
 
-/* ─────────────────────────────────────────────
-   AUTH PAGE COMPONENT
-   Renders inside MainLayout (<Header /> + <main> + <Footer />)
-───────────────────────────────────────────── */
 export default function Auth() {
-  /* ── Persisted user state (localStorage) ── */
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('xsport_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'));
 
-  /* Sync user → localStorage */
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('xsport_user', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('xsport_user');
-    }
-  }, [currentUser]);
-
-  /* If already logged in, redirect to home */
-  useEffect(() => {
-    if (currentUser) {
+    if (isLoggedIn) {
       window.location.href = '/';
     }
-  }, []);
+  }, [isLoggedIn]);
 
   const [isLoginView, setIsLoginView] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -99,8 +46,8 @@ export default function Auth() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  /* ── Handlers ── */
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setError('');
@@ -115,448 +62,386 @@ export default function Auth() {
     setSuccess('');
   };
 
-  /* ── Cart Merge Helper: merge guest cart with user's saved cart ── */
+  const parseJwt = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+          window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error("Lỗi giải mã token:", e);
+      return null;
+    }
+  };
+
   const mergeCartsOnLogin = (userEmail) => {
     try {
       const guestCart = JSON.parse(localStorage.getItem('xsport_cart') || '[]');
       const savedCart = JSON.parse(localStorage.getItem(`saved_cart_${userEmail}`) || '[]');
 
-      /* Build a map keyed by id+size+color for deduplication */
       const cartMap = new Map();
-      const itemKey = (item) =>
-        `${item.id}_${item.selectedSize || ''}_${item.selectedColor || ''}`;
+      const itemKey = (item) => `${item.id}_${item.selectedSize || ''}_${item.selectedColor || ''}`;
 
-      /* Add saved cart items first */
-      savedCart.forEach((item) => {
-        const key = itemKey(item);
-        if (cartMap.has(key)) {
-          const existing = cartMap.get(key);
-          existing.quantity = (existing.quantity || 1) + (item.quantity || 1);
-        } else {
-          cartMap.set(key, { ...item, quantity: item.quantity || 1 });
-        }
-      });
-
-      /* Merge guest cart items (sum quantities for duplicates) */
+      savedCart.forEach((item) => cartMap.set(itemKey(item), { ...item, quantity: item.quantity || 1 }));
       guestCart.forEach((item) => {
         const key = itemKey(item);
         if (cartMap.has(key)) {
-          const existing = cartMap.get(key);
-          existing.quantity = (existing.quantity || 1) + (item.quantity || 1);
+          cartMap.get(key).quantity += (item.quantity || 1);
         } else {
           cartMap.set(key, { ...item, quantity: item.quantity || 1 });
         }
       });
 
-      const mergedCart = Array.from(cartMap.values());
-      localStorage.setItem('xsport_cart', JSON.stringify(mergedCart));
+      localStorage.setItem('xsport_cart', JSON.stringify(Array.from(cartMap.values())));
       window.dispatchEvent(new Event('cartUpdated'));
-    } catch {
-      /* If merge fails, keep current cart as-is */
+    } catch (e) {
+      console.error("Lỗi đồng bộ giỏ hàng:", e);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
-    let db = [];
-    try {
-      const stored = localStorage.getItem('xsport_users_db');
-      if (stored) db = JSON.parse(stored);
-    } catch { }
 
     if (isForgotPassword) {
       if (!formData.email.trim()) {
         setError('Vui lòng nhập email.');
         return;
       }
-      let foundUser = null;
-      for (let i = 0; i < db.length; i++) {
-        if (db[i].email === formData.email) {
-          foundUser = db[i];
-          break;
-        }
-      }
-      if (!foundUser) {
-        setError('Email không tồn tại trong hệ thống!');
-      } else {
-        setSuccess('✅ Đường dẫn đặt lại mật khẩu đã gửi về Gmail của bạn!');
-      }
+      setSuccess('Hệ thống đang xử lý yêu cầu đặt lại mật khẩu của bạn!');
       return;
     }
 
-    if (isLoginView) {
-      /* ── LOGIN ── */
-      if (formData.email === 'admin@xsport.com' && formData.password === 'admin123') {
-        const adminSession = { name: 'Super Admin', email: formData.email, role: 'ADMIN' };
-        localStorage.setItem('xsport_user', JSON.stringify(adminSession));
-        window.dispatchEvent(new Event('xsportDataUpdated'));
-        window.location.href = '/admin'; // Redirect immediately
-        return; // STOP execution
-      }
+    setIsLoading(true);
 
-      // Else -> Proceed to search inside xsport_users_db for CUSTOMER
-      let foundUser = null;
-      for (let i = 0; i < db.length; i++) {
-        if (db[i].email === formData.email && db[i].password === formData.password) {
-          foundUser = db[i];
-          break;
+    try {
+      if (isLoginView) {
+        /* ── LUỒNG ĐĂNG NHẬP THẬT ── */
+        const loginData = {
+          email: formData.email,
+          password: formData.password
+        };
+
+        const res = await authService.login(loginData);
+
+        if (res.result && res.result.token) {
+          const token = res.result.token;
+          const decodedToken = parseJwt(token) || {};
+
+          const userSession = {
+            email: decodedToken.sub || formData.email,
+            role: decodedToken.scope || 'USER',
+            name: decodedToken.name || formData.email.split('@')[0],
+            phone: decodedToken.phone || '' // Bổ sung lấy số điện thoại
+          };
+
+          localStorage.setItem('xsport_user', JSON.stringify(userSession));
+          mergeCartsOnLogin(userSession.email);
+
+          window.dispatchEvent(new Event('xsportDataUpdated'));
+
+          if (userSession.role === 'ADMIN') {
+            window.location.href = '/admin';
+          } else {
+            window.location.href = '/';
+          }
+        } else {
+          setError('Đăng nhập thất bại. Vui lòng kiểm tra lại.');
         }
-      }
 
-      if (foundUser) {
-        localStorage.setItem('xsport_user', JSON.stringify(foundUser));
-        mergeCartsOnLogin(formData.email);
-        window.dispatchEvent(new Event('xsportDataUpdated'));
-        window.location.href = '/';
       } else {
-        setError('Sai tài khoản hoặc mật khẩu.');
-      }
-    } else {
-      /* ── REGISTER ── */
-      if (!formData.name.trim()) {
-        setError('Vui lòng nhập họ tên.');
-        return;
-      }
-      if (!formData.email.trim()) {
-        setError('Vui lòng nhập email.');
-        return;
-      }
-      if (formData.password.length < 6) {
-        setError('Mật khẩu phải có ít nhất 6 ký tự.');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setError('Mật khẩu xác nhận không khớp.');
-        return;
-      }
-      
-      let emailExists = false;
-      for (let i = 0; i < db.length; i++) {
-        if (db[i].email === formData.email) {
-          emailExists = true;
-          break;
+        /* ── LUỒNG ĐĂNG KÝ THẬT ── */
+        if (!formData.name.trim()) return setError('Vui lòng nhập họ tên.');
+        if (!formData.email.trim()) return setError('Vui lòng nhập email.');
+        if (formData.password.length < 6) return setError('Mật khẩu phải có ít nhất 6 ký tự.');
+        if (formData.password !== formData.confirmPassword) return setError('Mật khẩu xác nhận không khớp.');
+
+        const registerData = {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          phone: formData.phone || '',
+          address: null
+        };
+
+        const res = await authService.register(registerData);
+
+        if (res.code === 1000 || res.result) {
+          setSuccess('✓ Đăng ký tài khoản MaxxSports thành công!');
+
+          const loginRes = await authService.login({ email: formData.email, password: formData.password });
+          if (loginRes.result?.token) {
+            const decodedToken = parseJwt(loginRes.result.token) || {};
+
+            const userSession = {
+              email: formData.email,
+              role: decodedToken.scope || 'USER',
+              name: decodedToken.name || formData.name,
+              phone: decodedToken.phone || formData.phone || ''
+            };
+
+            localStorage.setItem('xsport_user', JSON.stringify(userSession));
+            mergeCartsOnLogin(formData.email);
+            window.dispatchEvent(new Event('xsportDataUpdated'));
+            window.location.href = '/';
+          }
         }
       }
-
-      if (emailExists) {
-        setError('Email đã tồn tại.');
-        return;
-      }
-
-      const newUser = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || '',
-        password: formData.password,
-        role: 'CUSTOMER'
-      };
-
-      db.push(newUser);
-      localStorage.setItem('xsport_users_db', JSON.stringify(db));
-      
-      localStorage.setItem('xsport_user', JSON.stringify(newUser));
-      mergeCartsOnLogin(newUser.email);
-      window.dispatchEvent(new Event('xsportDataUpdated'));
-      window.location.href = '/';
+    } catch (errorMessage) {
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSocialLogin = (provider) => {
-    alert(`Đăng nhập bằng ${provider} — Tính năng sẽ được tích hợp sớm.`);
+    alert(`Đăng nhập bằng ${provider} — Tính năng sẽ được tích hợp thông qua OAuth2 tương lai.`);
   };
 
-  /* ─────────────────────────────────────────────
-     RENDER — This outputs into <main> of MainLayout
-     Header and Footer are provided by MainLayout
-  ───────────────────────────────────────────── */
   return (
-    <div className="auth-page">
-
-      {/* ── Breadcrumb (full-width bar) ── */}
-      <div className="auth-breadcrumb">
-        <div className="auth-breadcrumb__inner">
-          <a href="/" className="auth-breadcrumb__link">Trang chủ</a>
-          <span className="auth-breadcrumb__sep">/</span>
-          <span className="auth-breadcrumb__current">
+      <div className="auth-page">
+        <div className="auth-breadcrumb">
+          <div className="auth-breadcrumb__inner">
+            <a href="/" className="auth-breadcrumb__link">Trang chủ</a>
+            <span className="auth-breadcrumb__sep">/</span>
+            <span className="auth-breadcrumb__current">
             {isLoginView ? 'Đăng nhập tài khoản' : 'Đăng ký tài khoản'}
           </span>
+          </div>
         </div>
-      </div>
 
-      {/* ── Centered form container ── */}
-      <div className="auth-container">
-        <div className="auth-card">
+        <div className="auth-container">
+          <div className="auth-card">
+            <h1 className="auth-title" id="auth-page-title">
+              {isForgotPassword ? 'QUÊN MẬT KHẨU' : (isLoginView ? 'ĐĂNG NHẬP TÀI KHOẢN' : 'ĐĂNG KÝ TÀI KHOẢN')}
+            </h1>
 
-          {/* Title */}
-          <h1 className="auth-title" id="auth-page-title">
-            {isForgotPassword ? 'QUÊN MẬT KHẨU' : (isLoginView ? 'ĐĂNG NHẬP TÀI KHOẢN' : 'ĐĂNG KÝ TÀI KHOẢN')}
-          </h1>
-
-          {/* Toggle hint */}
-          {!isForgotPassword && (
-            <p className="auth-subtitle">
-            {isLoginView ? (
-              <>
-                Bạn chưa có tài khoản?{' '}
-                <button
-                  type="button"
-                  className="auth-toggle-link"
-                  onClick={toggleView}
-                  id="toggle-to-register"
-                >
-                  Đăng ký tại đây
-                </button>
-              </>
-            ) : (
-              <>
-                Bạn đã có tài khoản?{' '}
-                <button
-                  type="button"
-                  className="auth-toggle-link"
-                  onClick={toggleView}
-                  id="toggle-to-login"
-                >
-                  Đăng nhập tại đây
-                </button>
-              </>
+            {!isForgotPassword && (
+                <p className="auth-subtitle">
+                  {isLoginView ? (
+                      <>
+                        Bạn chưa có tài khoản?{' '}
+                        <button type="button" className="auth-toggle-link" onClick={toggleView} id="toggle-to-register">
+                          Đăng ký tại đây
+                        </button>
+                      </>
+                  ) : (
+                      <>
+                        Bạn đã có tài khoản?{' '}
+                        <button type="button" className="auth-toggle-link" onClick={toggleView} id="toggle-to-login">
+                          Đăng nhập tại đây
+                        </button>
+                      </>
+                  )}
+                </p>
             )}
-            </p>
-          )}
 
-          {/* Error / Success */}
-          {error && (
-            <div className="auth-message auth-message--error" role="alert" id="auth-error">
-              <span className="auth-message__icon">⚠</span>
-              <span className="error-text">{error}</span>
-            </div>
-          )}
-          {success && (
-            <div className="auth-message auth-message--success" role="status" id="auth-success">
-              <span className="auth-message__icon">✓</span>
-              <span>{success}</span>
-            </div>
-          )}
+            {error && (
+                <div className="auth-message auth-message--error" role="alert" id="auth-error">
+                  <span className="auth-message__icon">⚠</span>
+                  <span className="error-text">{error}</span>
+                </div>
+            )}
+            {success && (
+                <div className="auth-message auth-message--success" role="status" id="auth-success">
+                  <span className="auth-message__icon">✓</span>
+                  <span>{success}</span>
+                </div>
+            )}
 
-          {/* ── Form ── */}
-          {isForgotPassword ? (
-            <form className="auth-form" onSubmit={handleSubmit} noValidate>
-              {!success && (
-                <>
+            {isForgotPassword ? (
+                <form className="auth-form" onSubmit={handleSubmit} noValidate>
+                  {!success && (
+                      <>
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="auth-email">
+                            Nhập Email của bạn <span className="auth-required">*</span>
+                          </label>
+                          <div className="auth-input-wrap">
+                            <span className="auth-input-icon"><MailIcon /></span>
+                            <input
+                                id="auth-email"
+                                type="email"
+                                name="email"
+                                className="auth-input"
+                                placeholder="Email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                            />
+                          </div>
+                        </div>
+                        <button type="submit" className="auth-submit-btn" style={{ marginBottom: '12px' }} disabled={isLoading}>
+                          {isLoading ? 'Đang gửi...' : 'Khôi phục mật khẩu'}
+                        </button>
+                      </>
+                  )}
+                  <button type="button" className="auth-submit-btn" style={{ background: '#333', color: '#fff' }} onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); setFormData(prev => ({ ...prev, email: '' })); }}>
+                    Quay lại đăng nhập
+                  </button>
+                </form>
+            ) : (
+                <form className="auth-form" onSubmit={handleSubmit} noValidate>
+                  {!isLoginView && (
+                      <div className="auth-field">
+                        <label className="auth-label" htmlFor="auth-name">
+                          Họ tên <span className="auth-required">*</span>
+                        </label>
+                        <div className="auth-input-wrap">
+                          <span className="auth-input-icon"><PersonIcon /></span>
+                          <input
+                              id="auth-name"
+                              type="text"
+                              name="name"
+                              className="auth-input"
+                              placeholder="Nhập họ tên"
+                              value={formData.name}
+                              onChange={handleChange}
+                              autoComplete="name"
+                              required
+                          />
+                        </div>
+                      </div>
+                  )}
+
+                  {!isLoginView && (
+                      <div className="auth-field">
+                        <label className="auth-label" htmlFor="auth-phone">
+                          Số điện thoại
+                        </label>
+                        <div className="auth-input-wrap">
+                          <span className="auth-input-icon"><PhoneIcon /></span>
+                          <input
+                              id="auth-phone"
+                              type="tel"
+                              name="phone"
+                              className="auth-input"
+                              placeholder="Nhập số điện thoại"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              autoComplete="tel"
+                          />
+                        </div>
+                      </div>
+                  )}
+
                   <div className="auth-field">
                     <label className="auth-label" htmlFor="auth-email">
-                      Nhập Email của bạn <span className="auth-required">*</span>
+                      Email <span className="auth-required">*</span>
                     </label>
                     <div className="auth-input-wrap">
                       <span className="auth-input-icon"><MailIcon /></span>
                       <input
-                        id="auth-email"
-                        type="email"
-                        name="email"
-                        className="auth-input"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
+                          id="auth-email"
+                          type="email"
+                          name="email"
+                          className="auth-input"
+                          placeholder="Email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          autoComplete="email"
+                          required
                       />
                     </div>
                   </div>
-                  <button type="submit" className="auth-submit-btn" style={{ marginBottom: '12px' }}>
-                    Khôi phục mật khẩu
+
+                  <div className="auth-field">
+                    <label className="auth-label" htmlFor="auth-password">
+                      Mật khẩu <span className="auth-required">*</span>
+                    </label>
+                    <div className="auth-input-wrap">
+                      <span className="auth-input-icon"><LockIcon /></span>
+                      <input
+                          id="auth-password"
+                          type={showPassword ? 'text' : 'password'}
+                          name="password"
+                          className="auth-input"
+                          placeholder="Mật khẩu"
+                          value={formData.password}
+                          onChange={handleChange}
+                          autoComplete={isLoginView ? 'current-password' : 'new-password'}
+                          required
+                      />
+                      <button
+                          type="button"
+                          className="auth-eye-btn"
+                          onClick={() => setShowPassword((v) => !v)}
+                          aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                          tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {!isLoginView && (
+                      <div className="auth-field">
+                        <label className="auth-label" htmlFor="auth-confirm-password">
+                          Xác nhận mật khẩu <span className="auth-required">*</span>
+                        </label>
+                        <div className="auth-input-wrap">
+                          <span className="auth-input-icon"><LockIcon /></span>
+                          <input
+                              id="auth-confirm-password"
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              name="confirmPassword"
+                              className="auth-input"
+                              placeholder="Nhập lại mật khẩu"
+                              value={formData.confirmPassword}
+                              onChange={handleChange}
+                              autoComplete="new-password"
+                              required
+                          />
+                          <button
+                              type="button"
+                              className="auth-eye-btn"
+                              onClick={() => setShowConfirmPassword((v) => !v)}
+                              aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                              tabIndex={-1}
+                          >
+                            {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                          </button>
+                        </div>
+                      </div>
+                  )}
+
+                  {isLoginView && !isForgotPassword && (
+                      <div className="auth-forgot-row">
+                        <button type="button" className="auth-forgot-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }} id="forgot-password-link" onClick={() => { setIsForgotPassword(true); setError(''); setSuccess(''); }}>
+                          Quên mật khẩu? Nhấn vào đây
+                        </button>
+                      </div>
+                  )}
+
+                  <button type="submit" className="auth-submit-btn" id="auth-submit-btn" disabled={isLoading}>
+                    {isLoading ? 'Đang xử lý...' : (isLoginView ? 'Đăng nhập' : 'Đăng ký')}
                   </button>
-                </>
-              )}
-              <button type="button" className="auth-submit-btn" style={{ background: '#333', color: '#fff' }} onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); setFormData(prev => ({ ...prev, email: '' })); }}>
-                Quay lại đăng nhập
+                </form>
+            )}
+
+            <div className="auth-divider">
+              <span className="auth-divider__line" />
+              <span className="auth-divider__text">Hoặc đăng nhập bằng</span>
+              <span className="auth-divider__line" />
+            </div>
+
+            <div className="auth-social-row">
+              <button type="button" className="auth-social-btn auth-social-btn--fb" onClick={() => handleSocialLogin('Facebook')} id="social-facebook">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                Facebook
               </button>
-            </form>
-          ) : (
-          <form className="auth-form" onSubmit={handleSubmit} noValidate>
-
-            {/* Họ tên — register only */}
-            {!isLoginView && (
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-name">
-                  Họ tên <span className="auth-required">*</span>
-                </label>
-                <div className="auth-input-wrap">
-                  <span className="auth-input-icon"><PersonIcon /></span>
-                  <input
-                    id="auth-name"
-                    type="text"
-                    name="name"
-                    className="auth-input"
-                    placeholder="Nhập họ tên"
-                    value={formData.name}
-                    onChange={handleChange}
-                    autoComplete="name"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Số điện thoại — register only */}
-            {!isLoginView && (
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-phone">
-                  Số điện thoại
-                </label>
-                <div className="auth-input-wrap">
-                  <span className="auth-input-icon"><PhoneIcon /></span>
-                  <input
-                    id="auth-phone"
-                    type="tel"
-                    name="phone"
-                    className="auth-input"
-                    placeholder="Nhập số điện thoại"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    autoComplete="tel"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Email */}
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="auth-email">
-                Email <span className="auth-required">*</span>
-              </label>
-              <div className="auth-input-wrap">
-                <span className="auth-input-icon"><MailIcon /></span>
-                <input
-                  id="auth-email"
-                  type="email"
-                  name="email"
-                  className="auth-input"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  autoComplete="email"
-                  required
-                />
-              </div>
+              <button type="button" className="auth-social-btn auth-social-btn--gg" onClick={() => handleSocialLogin('Google')} id="social-google">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Google
+              </button>
             </div>
-
-            {/* Mật khẩu */}
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="auth-password">
-                Mật khẩu <span className="auth-required">*</span>
-              </label>
-              <div className="auth-input-wrap">
-                <span className="auth-input-icon"><LockIcon /></span>
-                <input
-                  id="auth-password"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  className="auth-input"
-                  placeholder="Mật khẩu"
-                  value={formData.password}
-                  onChange={handleChange}
-                  autoComplete={isLoginView ? 'current-password' : 'new-password'}
-                  required
-                />
-                <button
-                  type="button"
-                  className="auth-eye-btn"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                </button>
-              </div>
-            </div>
-
-            {/* Xác nhận mật khẩu — register only */}
-            {!isLoginView && (
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-confirm-password">
-                  Xác nhận mật khẩu <span className="auth-required">*</span>
-                </label>
-                <div className="auth-input-wrap">
-                  <span className="auth-input-icon"><LockIcon /></span>
-                  <input
-                    id="auth-confirm-password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    className="auth-input"
-                    placeholder="Nhập lại mật khẩu"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="auth-eye-btn"
-                    onClick={() => setShowConfirmPassword((v) => !v)}
-                    aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Quên mật khẩu — login only */}
-            {isLoginView && !isForgotPassword && (
-              <div className="auth-forgot-row">
-                <button type="button" className="auth-forgot-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }} id="forgot-password-link" onClick={() => { setIsForgotPassword(true); setError(''); setSuccess(''); }}>
-                  Quên mật khẩu? Nhấn vào đây
-                </button>
-              </div>
-            )}
-
-            {/* Submit */}
-            <button type="submit" className="auth-submit-btn" id="auth-submit-btn">
-              {isLoginView ? 'Đăng nhập' : 'Đăng ký'}
-            </button>
-          </form>
-          )}
-
-          {/* Social login divider */}
-          <div className="auth-divider">
-            <span className="auth-divider__line" />
-            <span className="auth-divider__text">Hoặc đăng nhập bằng</span>
-            <span className="auth-divider__line" />
           </div>
-
-          {/* Social buttons */}
-          <div className="auth-social-row">
-            <button
-              type="button"
-              className="auth-social-btn auth-social-btn--fb"
-              onClick={() => handleSocialLogin('Facebook')}
-              id="social-facebook"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              Facebook
-            </button>
-            <button
-              type="button"
-              className="auth-social-btn auth-social-btn--gg"
-              onClick={() => handleSocialLogin('Google')}
-              id="social-google"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              Google
-            </button>
-          </div>
-
         </div>
       </div>
-    </div>
   );
 }

@@ -30,6 +30,6 @@ public class RegisterRequest {
             message = "Số điện thoại không đúng định dạng Việt Nam")
     private String phone;
 
-    @NotBlank(message = "Địa chỉ không được để trống")
+    //@NotBlank(message = "Địa chỉ không được để trống")
     private String address;
 }
