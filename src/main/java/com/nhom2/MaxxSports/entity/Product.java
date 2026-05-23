@@ -41,4 +41,8 @@ public class Product {
             cascade = CascadeType.ALL
     )
     private List<ProductDetail> productDetails;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_danh_muc")
+    private Category category;
 }
