@@ -1,5 +1,5 @@
 package com.nhom2.MaxxSports.service;
-
+import com.nhom2.MaxxSports.dto.response.ProductPageResponse;
 import com.nhom2.MaxxSports.dto.request.ProductRequest;
 import com.nhom2.MaxxSports.dto.response.ProductResponse;
 import com.nhom2.MaxxSports.entity.Product;
@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
 import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -107,5 +109,29 @@ public class ProductService {
                 .orElseThrow(() ->
                         new RuntimeException("Không tìm thấy sản phẩm"));
         productRepository.delete(product);
+    }
+    public ProductPageResponse getProductsPaging(
+            int page,
+            int size
+    ) {
+
+        Pageable pageable =
+                PageRequest.of(page, size);
+
+        Page<Product> productPage =
+                productRepository.findAll(pageable);
+
+        List<ProductResponse> products =
+                productPage.getContent()
+                        .stream()
+                        .map(productMapper::toProductResponse)
+                        .toList();
+
+        return ProductPageResponse.builder()
+                .content(products)
+                .currentPage(productPage.getNumber())
+                .totalPages(productPage.getTotalPages())
+                .totalItems(productPage.getTotalElements())
+                .build();
     }
 }
