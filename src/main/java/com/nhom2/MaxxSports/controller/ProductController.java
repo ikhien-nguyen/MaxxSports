@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
-
+import com.nhom2.MaxxSports.dto.response.ProductPageResponse;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -85,5 +85,22 @@ public class ProductController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping
+    public ResponseEntity<ProductPageResponse> getProductsPaging(
+
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @RequestParam(defaultValue = "5")
+            int size
+    ) {
+
+        return ResponseEntity.ok(
+                productService.getProductsPaging(
+                        page,
+                        size
+                )
+        );
     }
 }
