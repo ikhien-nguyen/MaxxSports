@@ -27,5 +27,7 @@ public class ProductResponse {
 
     Double gia;
 
+    String thumbnail;
+
     List<ProductDetailResponse> productDetails;
 }

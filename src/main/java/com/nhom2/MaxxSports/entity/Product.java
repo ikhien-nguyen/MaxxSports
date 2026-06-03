@@ -13,6 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "product")
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ma_san_pham")
@@ -45,4 +46,26 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_danh_muc")
     private Category category;
+
+    @Transient
+    public String getThumbnail() {
+
+        if(productDetails == null || productDetails.isEmpty()){
+            return null;
+        }
+
+        ProductDetail firstDetail =
+                productDetails.get(0);
+
+        if(firstDetail.getImages() == null
+                || firstDetail.getImages().isEmpty()){
+
+            return null;
+        }
+
+        return firstDetail
+                .getImages()
+                .get(0)
+                .getUrl();
+    }
 }

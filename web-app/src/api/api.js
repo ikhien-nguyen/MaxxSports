@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 1. Cấu hình đường dẫn gốc (Bốc chuẩn từ file .env hoặc dùng dự phòng mặc định)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/xsports/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/xsports';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

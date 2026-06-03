@@ -4,7 +4,6 @@ import com.nhom2.MaxxSports.config.VnpayConfig;
 import com.nhom2.MaxxSports.entity.Order;
 import com.nhom2.MaxxSports.entity.Payment;
 import com.nhom2.MaxxSports.enums.OrderStatus;
-import com.nhom2.MaxxSports.enums.PaymentMethod;
 import com.nhom2.MaxxSports.enums.PaymentStatus;
 import com.nhom2.MaxxSports.repository.OrderRepository;
 import com.nhom2.MaxxSports.repository.PaymentRepository;
@@ -22,7 +21,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private final com.nhom2.MaxxSports.config.VnpayConfig vnpayConfig;
+    private final VnpayConfig vnpayConfig;
 
     private final OrderRepository orderRepository;
 
@@ -40,8 +39,7 @@ public class PaymentService {
                                         "Không tìm thấy đơn hàng"
                                 ));
 
-        Payment payment =
-                order.getPayment();
+        Payment payment = order.getPayment();
 
         String transactionNo =
                 payment.getTransactionNo();
@@ -61,13 +59,16 @@ public class PaymentService {
         params.put(
                 "vnp_Amount",
                 String.valueOf(
-                        (long)(
+                        (long) (
                                 order.getTotalPrice() * 100
                         )
                 )
         );
 
-        params.put("vnp_CurrCode", "VND");
+        params.put(
+                "vnp_CurrCode",
+                "VND"
+        );
 
         params.put(
                 "vnp_TxnRef",
@@ -79,9 +80,15 @@ public class PaymentService {
                 "Thanh toan don hang"
         );
 
-        params.put("vnp_OrderType", "other");
+        params.put(
+                "vnp_OrderType",
+                "other"
+        );
 
-        params.put("vnp_Locale", "vn");
+        params.put(
+                "vnp_Locale",
+                "vn"
+        );
 
         params.put(
                 "vnp_ReturnUrl",
@@ -111,33 +118,58 @@ public class PaymentService {
         StringBuilder query =
                 new StringBuilder();
 
-        for (String fieldName : fieldNames) {
+        for (int i = 0; i < fieldNames.size(); i++) {
+
+            String fieldName =
+                    fieldNames.get(i);
 
             String value =
                     params.get(fieldName);
 
-            hashData.append(fieldName)
-                    .append('=')
-                    .append(value)
-                    .append('&');
+            if (value != null
+                    && !value.isEmpty()) {
 
-            query.append(fieldName)
-                    .append('=')
-                    .append(
-                            URLEncoder.encode(
-                                    value,
-                                    StandardCharsets.UTF_8
-                            )
-                    )
-                    .append('&');
+                // HASH DATA
+                hashData.append(fieldName);
+
+                hashData.append("=");
+
+                hashData.append(
+                        URLEncoder.encode(
+                                value,
+                                StandardCharsets.US_ASCII
+                        )
+                );
+
+                // QUERY
+                query.append(
+                        URLEncoder.encode(
+                                fieldName,
+                                StandardCharsets.US_ASCII
+                        )
+                );
+
+                query.append("=");
+
+                query.append(
+                        URLEncoder.encode(
+                                value,
+                                StandardCharsets.US_ASCII
+                        )
+                );
+
+                // dấu &
+                if (i < fieldNames.size() - 1) {
+
+                    hashData.append("&");
+
+                    query.append("&");
+                }
+            }
         }
 
-        hashData.deleteCharAt(
-                hashData.length() - 1
-        );
-
-        query.deleteCharAt(
-                query.length() - 1
+        System.out.println(
+                "HASH DATA: " + hashData
         );
 
         String secureHash =
@@ -146,12 +178,24 @@ public class PaymentService {
                         hashData.toString()
                 );
 
-        query.append("&vnp_SecureHash=")
-                .append(secureHash);
+        System.out.println(
+                "SECURE HASH: " + secureHash
+        );
 
-        return vnpayConfig.getPayUrl()
-                + "?"
-                + query;
+        query.append("&vnp_SecureHash=");
+
+        query.append(secureHash);
+
+        String paymentUrl =
+                vnpayConfig.getPayUrl()
+                        + "?"
+                        + query;
+
+        System.out.println(
+                "PAYMENT URL: " + paymentUrl
+        );
+
+        return paymentUrl;
     }
 
     public String paymentReturn(
@@ -172,7 +216,8 @@ public class PaymentService {
                                 "Không tìm thấy giao dịch"
                         ));
 
-        Order order = payment.getOrder();
+        Order order =
+                payment.getOrder();
 
         if ("00".equals(responseCode)) {
 
@@ -188,6 +233,10 @@ public class PaymentService {
 
             payment.setStatus(
                     PaymentStatus.FAILED
+            );
+
+            order.setOrderStatus(
+                    OrderStatus.CANCELLED
             );
         }
 

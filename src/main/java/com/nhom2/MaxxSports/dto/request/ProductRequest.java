@@ -26,11 +26,12 @@ public class ProductRequest {
     private String loaiSanPham;
 
     @NotNull(message = "Giá không được để trống")
-
     @DecimalMin(
             value = "0",
             inclusive = false,
             message = "Giá phải lớn hơn 0"
     )
     private Double gia;
+
+    private String thumbnail;
 }

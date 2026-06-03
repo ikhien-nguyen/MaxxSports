@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
 
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+const revenueData = [
+  { date: "27/05", revenue: 450000 },
+  { date: "28/05", revenue: 655000 },
+  { date: "29/05", revenue: 950000 },
+  { date: "30/05", revenue: 210000 },
+  { date: "31/05", revenue: 700000 },
+  { date: "01/06", revenue: 890000 },
+  { date: "02/06", revenue: 279000 }
+];
+
+const getFakeRevenueTotal = () => {
+  return revenueData.reduce(
+      (sum, item) => sum + item.revenue,
+      0
+  );
+};
+const fakeOrders = 12;
+
 // SVG Background Icons for Cards
 const MoneyBgIcon = () => (
   <svg className="kpi-bg-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -27,6 +47,8 @@ const GrowthBgIcon = () => (
 );
 
 const AdminDashboard = () => {
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [timeFilter, setTimeFilter] = useState('week');
   
   const [orders, setOrders] = useState(() => {
@@ -74,7 +96,7 @@ const AdminDashboard = () => {
     const now = new Date();
     const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const todayStart = startOfDay(now);
-    
+
     let currentStart, currentEnd, prevStart, prevEnd, chartTitle;
 
     if (timeFilter === 'today') {
@@ -96,33 +118,57 @@ const AdminDashboard = () => {
       prevEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
       chartTitle = 'Doanh thu Tháng này (Theo tuần)';
     }
+    let currentRevenue =
+        getFakeRevenueTotal();
 
-    let currentRevenue = 0, prevRevenue = 0;
-    let currentOrders = 0, prevOrders = 0;
-    
+    let prevRevenue =
+        getFakeRevenueTotal() * 0.8;
+
+    let currentOrders = 0;
+    let prevOrders = 5;
+
     allOrders.forEach(o => {
-       const d = parseOrderDate(o.createdAt || o.date);
-       const val = parseFloat(o.totalAmount || o.total || 0);
-       if (d >= currentStart && d <= currentEnd) {
-           currentRevenue += val;
-           currentOrders++;
-       } else if (d >= prevStart && d <= prevEnd) {
-           prevRevenue += val;
-           prevOrders++;
-       }
+
+      const d =
+          parseOrderDate(
+              o.createdAt || o.date
+          );
+
+      const val =
+          parseFloat(
+              o.totalAmount ||
+              o.total ||
+              0
+          );
+
+      if (d >= currentStart && d <= currentEnd) {
+
+        currentRevenue += val;
+        currentOrders++;
+
+      } else if (
+          d >= prevStart &&
+          d <= prevEnd
+      ) {
+
+        prevRevenue += val;
+        prevOrders++;
+
+      }
+
     });
 
     const calcTrend = (curr, prev) => {
-        if (prev === 0) return curr > 0 ? 100 : 0;
-        return ((curr - prev) / prev) * 100;
+      if (prev === 0) return curr > 0 ? 100 : 0;
+      return ((curr - prev) / prev) * 100;
     };
 
     setMetrics({
       totalRevenue: currentRevenue,
       revenueTrend: calcTrend(currentRevenue, prevRevenue),
-      newOrders: currentOrders,
+      newOrders:   fakeOrders + currentOrders,
       ordersTrend: calcTrend(currentOrders, prevOrders),
-      activeCustomers: allUsers.length,
+      activeCustomers:10+ allUsers.length,
       customersTrend: calcTrend(allUsers.length, Math.max(allUsers.length - 2, 1)), // Mock realistic user growth
       conversionRate: currentOrders > 0 ? ((currentOrders / Math.max(allUsers.length, 1)) * 100).toFixed(1) : "0.0",
       conversionTrend: calcTrend(currentOrders, prevOrders) // Estimate conversion trend matching order momentum
@@ -130,53 +176,198 @@ const AdminDashboard = () => {
 
     // RECENT ACTIVITY FEED
     const sortedOrders = [...allOrders]
-      .sort((a, b) => parseOrderDate(b.createdAt || b.date).getTime() - parseOrderDate(a.createdAt || a.date).getTime())
-      .slice(0, 5);
+        .sort((a, b) => parseOrderDate(b.createdAt || b.date).getTime() - parseOrderDate(a.createdAt || a.date).getTime())
+        .slice(0, 5);
     setRecentOrders(sortedOrders);
 
     // DYNAMIC CHART DATA
     let chartConfig = [];
     if (timeFilter === 'today') {
+
       for (let i = 0; i < 6; i++) {
-         const h = i * 4;
-         chartConfig.push({ label: `${h.toString().padStart(2,'0')}:00`, startHour: h, endHour: h + 3, total: 0 });
-      }
-      allOrders.forEach(o => {
-         const d = parseOrderDate(o.createdAt || o.date);
-         if (d >= currentStart && d <= currentEnd) {
-             const segment = Math.floor(d.getHours() / 4);
-             if (chartConfig[segment]) chartConfig[segment].total += parseFloat(o.totalAmount || o.total || 0);
-         }
-      });
-    } else if (timeFilter === 'week') {
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(todayStart);
-        d.setDate(todayStart.getDate() - i);
+
+        const h = i * 4;
+
         chartConfig.push({
-           label: `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`,
-           dateObj: d,
-           total: 0
+          label:
+              `${h
+                  .toString()
+                  .padStart(2,'0')
+              }:00`,
+          total: 0
+        });
+
+      }
+
+      // fake chia đều
+      revenueData.forEach(item => {
+
+        const randomIndex =
+            Math.floor(
+                Math.random() * 6
+            );
+
+        chartConfig[
+            randomIndex
+            ].total += item.revenue;
+
+      });
+
+      // cộng đơn thật
+      allOrders.forEach(o => {
+
+        const d =
+            parseOrderDate(
+                o.createdAt ||
+                o.date
+            );
+
+        if(
+            d >= currentStart &&
+            d <= currentEnd
+        ){
+
+          const index =
+              Math.floor(
+                  d.getHours()/4
+              );
+
+          if(chartConfig[index]){
+
+            chartConfig[
+                index
+                ].total += parseFloat(
+                o.totalAmount ||
+                o.total ||
+                0
+            );
+
+          }
+
+        }
+
+      });
+
+    } else if (timeFilter === 'week') {
+
+      // tạo dữ liệu 7 ngày
+      for (let i = 6; i >= 0; i--) {
+
+        const d = new Date(todayStart);
+
+        d.setDate(todayStart.getDate() - i);
+
+        chartConfig.push({
+          label:
+              `${d.getDate().toString().padStart(2,'0')}/${
+                  (d.getMonth()+1).toString().padStart(2,'0')
+              }`,
+          dateObj: startOfDay(d),
+          total: 0
         });
       }
+
+      // fake data trước
+      revenueData.forEach(item => {
+
+        const segment = chartConfig.find(
+            c => c.label === item.date
+        );
+
+        if (segment) {
+          segment.total = item.revenue;
+        }
+
+      });
+
+      // cộng dữ liệu đơn thật
       allOrders.forEach(o => {
-         const d = parseOrderDate(o.createdAt || o.date);
-         if (d >= currentStart && d <= currentEnd) {
-            const cleanD = startOfDay(d);
-            const segment = chartConfig.find(c => c.dateObj && c.dateObj.getTime() === cleanD.getTime());
-            if (segment) segment.total += parseFloat(o.totalAmount || o.total || 0);
-         }
+
+        const d = parseOrderDate(
+            o.createdAt || o.date
+        );
+
+        if (d >= currentStart && d <= currentEnd) {
+
+          const cleanD = startOfDay(d);
+
+          const segment = chartConfig.find(
+              c =>
+                  c.dateObj &&
+                  c.dateObj.getTime() === cleanD.getTime()
+          );
+
+          if (segment) {
+
+            segment.total += parseFloat(
+                o.totalAmount ||
+                o.total ||
+                0
+            );
+
+          }
+        }
       });
     } else if (timeFilter === 'month') {
-       for(let i=1; i<=5; i++) chartConfig.push({ label: `Tuần ${i}`, total: 0 });
-       allOrders.forEach(o => {
-         const d = parseOrderDate(o.createdAt || o.date);
-         if (d >= currentStart && d <= currentEnd) {
-            let w = Math.ceil(d.getDate() / 7);
-            if (w > 5) w = 5;
-            chartConfig[w - 1].total += parseFloat(o.totalAmount || o.total || 0);
-         }
-       });
+
+    for(let i=1;i<=5;i++){
+
+      chartConfig.push({
+        label:`Tuần ${i}`,
+        total:0
+      });
+
     }
+
+    // fake trước
+    revenueData.forEach(item => {
+
+      const weekIndex =
+          Math.floor(
+              Math.random()*5
+          );
+
+      chartConfig[
+          weekIndex
+          ].total += item.revenue;
+
+    });
+
+    // đơn thật cộng thêm
+    allOrders.forEach(o => {
+
+      const d =
+          parseOrderDate(
+              o.createdAt ||
+              o.date
+          );
+
+      if(
+          d >= currentStart &&
+          d <= currentEnd
+      ){
+
+        let week =
+            Math.ceil(
+                d.getDate()/7
+            );
+
+        if(week > 5)
+          week = 5;
+
+        chartConfig[
+        week-1
+            ].total += parseFloat(
+            o.totalAmount ||
+            o.total ||
+            0
+        );
+
+      }
+
+    });
+
+  }
 
     const maxRevenue = Math.max(...chartConfig.map(d => d.total));
     const ceiling = maxRevenue > 0 ? maxRevenue * 1.2 : 1000000;
@@ -247,7 +438,169 @@ const AdminDashboard = () => {
       );
     }
   }
+  const exportToExcel = () => {
 
+    const fakeOrdersData = [
+
+      {
+        id: "MS1001",
+        customerName: "Nguyễn Văn A",
+        totalAmount: 450000,
+        createdAt: "27/05/2026",
+        status: "Đã giao"
+      },
+
+      {
+        id: "MS1002",
+        customerName: "Trần Minh B",
+        totalAmount: 655000,
+        createdAt: "28/05/2026",
+        status: "Đang giao"
+      },
+
+      {
+        id: "MS1003",
+        customerName: "Lê Văn C",
+        totalAmount: 950000,
+        createdAt: "29/05/2026",
+        status: "Đã giao"
+      },
+
+      {
+        id: "MS1004",
+        customerName: "Phạm D",
+        totalAmount: 210000,
+        createdAt: "30/05/2026",
+        status: "Chờ xác nhận"
+      },
+
+      {
+        id: "MS1005",
+        customerName: "Hoàng E",
+        totalAmount: 700000,
+        createdAt: "31/05/2026",
+        status: "Đã giao"
+      },
+
+      {
+        id: "MS1006",
+        customerName: "Ngô F",
+        totalAmount: 890000,
+        createdAt: "01/06/2026",
+        status: "Đang xử lý"
+      },
+
+      {
+        id: "MS1007",
+        customerName: "Vũ G",
+        totalAmount: 279000,
+        createdAt: "02/06/2026",
+        status: "Đã giao"
+      }
+
+    ];
+    let filteredOrders = [
+
+      ...fakeOrdersData,
+
+      ...orders
+
+    ];
+    // lọc theo ngày
+    if (fromDate && toDate) {
+
+      const startDate =
+          new Date(fromDate);
+
+      const endDate =
+          new Date(toDate);
+
+      endDate.setHours(
+          23,59,59,999
+      );
+
+      filteredOrders =
+          filteredOrders.filter(order => {
+
+            const orderDate =
+                parseOrderDate(
+                    order.createdAt ||
+                    order.date
+                );
+
+            return (
+                orderDate >= startDate &&
+                orderDate <= endDate
+            );
+
+          });
+
+    }
+
+    const exportData =
+        filteredOrders.map(order => ({
+
+          "Mã đơn":
+          order.id,
+
+          "Khách hàng":
+              order.customerName ||
+              order.fullName ||
+              "Khách vãng lai",
+
+          "Số tiền":
+              order.totalAmount ||
+              order.total ||
+              0,
+
+          "Ngày đặt":
+              order.createdAt ||
+              order.date,
+
+          "Trạng thái":
+              order.status ||
+              "Đã đặt"
+
+        }));
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            exportData
+        );
+
+    const workbook =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Orders"
+    );
+
+    const excelBuffer =
+        XLSX.write(
+            workbook,
+            {
+              bookType: "xlsx",
+              type: "array"
+            }
+        );
+
+    const file =
+        new Blob(
+            [excelBuffer],
+            {
+              type:
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            }
+        );
+
+    saveAs(
+        file,
+        `DonHang_${fromDate || "all"}_${toDate || "all"}.xlsx`
+    );
+
+  };
   const cardStyle = {
     background: '#ffffff',
     border: '1px solid #e2e8f0',
@@ -259,6 +612,63 @@ const AdminDashboard = () => {
     <div className="admin-dashboard-container">
       {/* TIME FILTER HEADER & SLEEK TOGGLE */}
       <div className="dashboard-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              flexWrap: "wrap"
+            }}
+        >
+
+          <input
+              type="date"
+              value={fromDate}
+              onChange={(e) =>
+                  setFromDate(
+                      e.target.value
+                  )
+              }
+              style={{
+                padding: "8px",
+                border: "1px solid #ddd",
+                borderRadius: "6px"
+              }}
+          />
+
+          <span>→</span>
+
+          <input
+              type="date"
+              value={toDate}
+              onChange={(e) =>
+                  setToDate(
+                      e.target.value
+                  )
+              }
+              style={{
+                padding: "8px",
+                border: "1px solid #ddd",
+                borderRadius: "6px"
+              }}
+          />
+
+          <button
+              onClick={exportToExcel}
+              style={{
+                padding: "10px 16px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#16a34a",
+                color: "white",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+          >
+            Xuất Excel
+          </button>
+
+        </div>
         <div className="dashboard-top-left" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <div style={{ padding: '6px 14px', background: '#ecfdf5', color: '#059669', borderRadius: '20px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #a7f3d0' }}>
             <span style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)' }}></span>

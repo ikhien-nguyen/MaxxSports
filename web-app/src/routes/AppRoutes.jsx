@@ -14,7 +14,7 @@ import MainLayout from '../components/layout/MainLayout';
 import AdminLayout from '../pages/Admin/AdminLayout';
 import StaticInfoPage from '../pages/StaticInfo/StaticInfoPage';
 import { staticPages } from '../pages/StaticInfo/staticContent';
-
+import StorePage from '../pages/StorePage';
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('xsport_user') || 'null');
   if (!user || user.role !== 'ADMIN') {
