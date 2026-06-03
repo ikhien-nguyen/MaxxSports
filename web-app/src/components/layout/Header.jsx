@@ -47,7 +47,7 @@ const navLinks = [
   { label: 'NỮ', href: '/nu' },
   { label: 'TRẺ EM', href: '/tre-em' },
   { label: 'OUTLET', href: '/outlet', highlight: true },
-  { label: 'CỬA HÀNG', href: '/category' },
+  { label: 'CỬA HÀNG', href: '/stores' }, // sửa
 ];
 
 const mobileNavLinks = [
@@ -58,7 +58,7 @@ const mobileNavLinks = [
   { label: 'NỮ', href: '/nu' },
   { label: 'TRẺ EM', href: '/tre-em' },
   { label: 'OUTLET', href: '/outlet', highlight: true },
-  { label: 'CỬA HÀNG', href: '/category' },
+  { label: 'CỬA HÀNG', href: '/stores' },
 ];
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
