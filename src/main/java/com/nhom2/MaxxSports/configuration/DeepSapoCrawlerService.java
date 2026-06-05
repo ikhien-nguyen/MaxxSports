@@ -119,7 +119,9 @@ public class DeepSapoCrawlerService implements CommandLineRunner {
                     List<Size> savedSizes = new ArrayList<>();
                     for (Element sizeEl : sizeElements) {
                         String tenSize = sizeEl.attr("data-value");
-                        savedSizes.add(getOrCreateSize(tenSize));
+                        if (isSizeStandard(tenSize)) {
+                            savedSizes.add(getOrCreateSize(tenSize));
+                        }
                     }
 
                     // Đề phòng sản phẩm không phân loại
@@ -239,5 +241,15 @@ public class DeepSapoCrawlerService implements CommandLineRunner {
         } catch (Exception e) {
             return 0.0;
         }
+    }
+
+    private boolean isSizeStandard(String size) {
+        // Chỉ chấp nhận các giá trị này là Size
+        String[] standardSizes = {"S", "M", "L", "XL", "2XL", "3XL", "FREESIZE", "38", "39", "40", "41", "42"};
+        String normalized = size.toUpperCase().trim();
+        for (String s : standardSizes) {
+            if (normalized.equals(s)) return true;
+        }
+        return false;
     }
 }
