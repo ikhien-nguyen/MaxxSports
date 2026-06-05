@@ -540,7 +540,7 @@ const handleDelete = async (id) => {
 
                   <option value="ATINO">ATINO</option>
 
-                  <option value="XSPORT">XSPORT</option>
+                  <option value="XSPORTS">XSPORTS</option>
 
                 </select>
 

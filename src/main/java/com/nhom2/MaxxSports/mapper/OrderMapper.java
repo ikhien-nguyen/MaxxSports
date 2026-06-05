@@ -17,6 +17,21 @@ public interface OrderMapper {
     )
 
     @Mapping(
+            target = "customerName",
+            source = "user.name"
+    )
+
+    @Mapping(
+            target = "email",
+            source = "user.email"
+    )
+
+    @Mapping(
+            target = "phone",
+            source = "user.phone"
+    )
+
+    @Mapping(
             target = "paymentMethod",
             source = "payment.method"
     )
@@ -31,7 +46,5 @@ public interface OrderMapper {
             source = "orderDetails"
     )
 
-    OrderResponse toResponse(
-            Order order
-    );
+    OrderResponse toResponse(Order order);
 }

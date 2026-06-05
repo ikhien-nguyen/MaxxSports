@@ -54,19 +54,22 @@ const AdminOrders = () => {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const loadOrders = async () => {
+    const loadOrders = async () => {
 
-    try{
+        try{
 
-      const data =
-          await orderService.getAllOrdersForAdmin();
+            const data =
+                await orderService.getAllOrdersForAdmin();
 
-        setOrders(data.result || []);
-    }catch(err){
+            console.log("API DATA:", data);
 
-      console.log(err);
+            setOrders(data.result || []);
+
+        }catch(err){
+
+            console.log(err);
+        }
     }
-  }
 
   useEffect(() => {
 
@@ -81,8 +84,10 @@ const AdminOrders = () => {
 
             await orderService
                 .updateOrderStatusByAdmin(
-                    orderId,
-                    newStatus
+                    {
+                        id: orderId,
+                        status: newStatus
+                    }
                 );
 
             await loadOrders();
@@ -137,18 +142,32 @@ const AdminOrders = () => {
     return parseFloat(amount || 0).toLocaleString('vi-VN') + 'đ';
   };
 
-  const getStatusClass = (status) => {
-    // Clean string comparison
-    const s = (status || '').replace(/[\u23F3\uD83D\uDE9A\u2714\uFE0F\u274C]/g, '').trim();
-    switch (s) {
-      case 'Đang giao hàng': return 'status-shipped';
-      case 'Hoàn thành': return 'status-completed';
-      case 'Đã xác nhận': return 'status-confirmed';
-      case 'Hủy': return 'status-cancelled';
-      case 'Chờ xác nhận':
-      default: return 'status-pending';
-    }
-  };
+    const getStatusClass = (status) => {
+
+        switch (status) {
+
+            case 'CHO_THANH_TOAN':
+                return 'status-pending';
+
+            case 'PENDING':
+                return 'status-pending';
+
+            case 'CONFIRMED':
+                return 'status-confirmed';
+
+            case 'SHIPPING':
+                return 'status-shipped';
+
+            case 'COMPLETED':
+                return 'status-completed';
+
+            case 'CANCELLED':
+                return 'status-cancelled';
+
+            default:
+                return 'status-pending';
+        }
+    };
 
   // Safe items extraction
   const getOrderItems = (order) => {
@@ -181,13 +200,16 @@ const AdminOrders = () => {
                 const contact = order.email || order.shippingAddress?.phone || order.phone || 'Không có thông tin liên hệ';
                 
                 return (
-                  <tr key={order.id}>
+                    <tr key={order.orderId}>
                     <td>
                       <div className="cell-with-icon">
                         <BoxIcon />
-                        <div className="order-id-link" onClick={() => handleView(order)}>
-                          {order.id.toString().startsWith('#MS') ? order.id : '#MS' + order.id.toString().substring(0, 6).toUpperCase()}
-                        </div>
+                          <div className="order-id-link" onClick={() => handleView(order)}>
+                              {order.orderId
+                                  ? '#MS' + String(order.orderId).substring(0, 6).toUpperCase()
+                                  : 'N/A'
+                              }
+                          </div>
                       </div>
                     </td>
                     <td>
@@ -203,23 +225,43 @@ const AdminOrders = () => {
                       <div className="cell-with-icon">
                         <CalendarIcon />
                         <span className="order-date">
-                          {order.date ? new Date(order.date).toLocaleString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
+                          {order.orderDate ? new Date(order.orderDate).toLocaleString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
                         </span>
                       </div>
                     </td>
-                    <td className="order-total">{formatCurrency(order.totalAmount || order.total || 0)}</td>
+                        <td className="order-total">
+                            {formatCurrency(order.totalPrice)}
+                        </td>
                     <td>
-                      <div className={`status-select-container ${getStatusClass(order.status || 'Chờ xác nhận')}`}>
+                      <div className={`status-select-container ${getStatusClass(order.orderStatus || 'Chờ xác nhận')}`}>
                         <select 
-                          className={`status-select ${getStatusClass(order.status || 'Chờ xác nhận')}`}
-                          value={order.status || 'Chờ xác nhận'}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          className={`status-select ${getStatusClass(order.orderStatus || 'Chờ xác nhận')}`}
+                          value={order.orderStatus || 'Chờ xác nhận'}
+                          onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
                         >
-                          <option value="Chờ xác nhận">⏳ Chờ xác nhận</option>
-                          <option value="Đã xác nhận">📦 Đã xác nhận</option>
-                          <option value="Đang giao hàng">🚚 Đang giao hàng</option>
-                          <option value="Hoàn thành">✔️ Hoàn thành</option>
-                          <option value="Hủy">❌ Hủy</option>
+                            <option value="CHO_THANH_TOAN">
+                                ⏳ Chờ thanh toán
+                            </option>
+
+                            <option value="PENDING">
+                                ⌛ Chờ xác nhận
+                            </option>
+
+                            <option value="CONFIRMED">
+                                ✅ Đã xác nhận
+                            </option>
+
+                            <option value="SHIPPING">
+                                🚚 Đang giao hàng
+                            </option>
+
+                            <option value="COMPLETED">
+                                ✔️ Hoàn thành
+                            </option>
+
+                            <option value="CANCELLED">
+                                ❌ Đã hủy
+                            </option>
                         </select>
                       </div>
                     </td>
@@ -228,7 +270,7 @@ const AdminOrders = () => {
                         <button className="action-btn view-btn" onClick={() => handleView(order)} title="Xem chi tiết">
                           <EyeIcon />
                         </button>
-                        <button className="action-btn delete-btn" onClick={() => handleDelete(order.id)} title="Xóa">
+                        <button className="action-btn delete-btn" onClick={() => handleDelete(order.orderId)} title="Xóa">
                           <TrashIcon />
                         </button>
                       </div>
@@ -252,7 +294,18 @@ const AdminOrders = () => {
         <div className="order-modal-overlay">
           <div className="order-modal">
             <div className="order-modal-header">
-              <h2><BoxIcon /> Chi tiết Đơn hàng {selectedOrder.id.toString().startsWith('#MS') ? selectedOrder.id : '#MS' + selectedOrder.id.toString().substring(0, 6).toUpperCase()}</h2>
+                <h2>
+                    <BoxIcon />
+                    Chi tiết Đơn hàng {
+                    selectedOrder.orderId
+                        ? (
+                            String(selectedOrder.orderId).startsWith('#MS')
+                                ? selectedOrder.orderId
+                                : '#MS' + String(selectedOrder.orderId).substring(0, 6).toUpperCase()
+                        )
+                        : 'N/A'
+                }
+                </h2>
               <button className="close-modal-btn" onClick={closeModal}>&times;</button>
             </div>
             
@@ -279,7 +332,9 @@ const AdminOrders = () => {
                   <h3>Thông tin Giao hàng</h3>
                   <div className="info-row">
                     <span className="info-label">Địa chỉ:</span>
-                    <span className="info-value">{selectedOrder.address || selectedOrder.shippingAddress || 'Chưa cung cấp'}</span>
+                      <span className="info-value">
+                        {selectedOrder.detailAddress || 'Chưa cung cấp'}
+                        </span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">Ghi chú:</span>
@@ -310,13 +365,15 @@ const AdminOrders = () => {
                         <tr key={index}>
                           <td>
                             <div className="item-product-col">
-                              <img 
-                                src={item.image || 'https://via.placeholder.com/50'} 
-                                alt={item.name} 
-                                className="item-thumbnail" 
-                                onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }}
-                              />
-                              <span className="item-name">{item.name}</span>
+                                <img
+                                    src={item.imageUrl || 'https://via.placeholder.com/50'}
+                                    alt={item.productName}
+                                    className="item-thumbnail"
+                                    onError={(e) => {
+                                        e.target.src = 'https://via.placeholder.com/50';
+                                    }}
+                                />
+                              <span className="item-name">{item.productName}</span>
                             </div>
                           </td>
                           <td className="item-price">{formatCurrency(item.price)}</td>
@@ -338,7 +395,9 @@ const AdminOrders = () => {
 
             <div className="order-modal-footer">
               <div className="order-modal-total">
-                Tổng cộng: <span>{formatCurrency(selectedOrder.totalAmount || selectedOrder.total || 0)}</span>
+                Tổng cộng: <span>{formatCurrency(
+                  selectedOrder.totalPrice || 0
+              )}</span>
               </div>
             </div>
           </div>

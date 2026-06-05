@@ -1,25 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
-
+import { orderService } from "../../services/orderService";
+import { userService } from "../../services/userService";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-// const revenueData = [
-//   { date: "27/05", revenue: 450000 },
-//   { date: "28/05", revenue: 655000 },
-//   { date: "29/05", revenue: 950000 },
-//   { date: "30/05", revenue: 210000 },
-//   { date: "31/05", revenue: 700000 },
-//   { date: "01/06", revenue: 890000 },
-//   { date: "02/06", revenue: 279000 }
-// ];
-
-// const getFakeRevenueTotal = () => {
-//   return revenueData.reduce(
-//       (sum, item) => sum + item.revenue,
-//       0
-//   );
-// };
-// const fakeOrders = 12;
+import { productService } from "../../services/productService";
 
 // SVG Background Icons for Cards
 const MoneyBgIcon = () => (
@@ -55,7 +40,38 @@ const AdminDashboard = () => {
     try { return JSON.parse(localStorage.getItem('xsport_orders')) || []; }
     catch { return []; }
   });
+  const loadDashboardData = async () => {
+    try {
 
+      const orderRes =
+          await orderService.getAllOrdersForAdmin();
+
+      const userRes =
+          await userService.getAllUsersForAdmin();
+      console.log("ORDER RES:", orderRes);
+      console.log("USER RES:", userRes);
+      const allOrders =
+          orderRes?.result || [];
+
+      const allUsers =
+          userRes?.result || [];
+
+      setOrders(allOrders);
+
+      calculateMetrics(
+          allOrders,
+          allUsers
+      );
+
+    } catch (error) {
+
+      console.error(
+          "Load dashboard error:",
+          error
+      );
+
+    }
+  };
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
     revenueTrend: 0,
@@ -88,11 +104,7 @@ const AdminDashboard = () => {
     return isNaN(d.getTime()) ? new Date() : d;
   };
 
-  const calculateMetrics = () => {
-    const allOrders = JSON.parse(localStorage.getItem('xsport_orders') || '[]');
-    const allUsers = JSON.parse(localStorage.getItem('xsport_users_db') || '[]');
-    setOrders(allOrders);
-
+  const calculateMetrics = (allOrders, allUsers) => {
     const now = new Date();
     const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const todayStart = startOfDay(now);
@@ -129,14 +141,12 @@ const AdminDashboard = () => {
 
       const d =
           parseOrderDate(
-              o.createdAt || o.date
+              o.createdAt || o.orderDate
           );
 
       const val =
           parseFloat(
-              o.totalAmount ||
-              o.total ||
-              0
+              o.totalPrice || 0
           );
 
       if (d >= currentStart && d <= currentEnd) {
@@ -174,7 +184,12 @@ const AdminDashboard = () => {
 
     // RECENT ACTIVITY FEED
     const sortedOrders = [...allOrders]
-        .sort((a, b) => parseOrderDate(b.createdAt || b.date).getTime() - parseOrderDate(a.createdAt || a.date).getTime())
+        .sort(
+        (a,b)=>
+            parseOrderDate(b.orderDate).getTime()
+            -
+            parseOrderDate(a.orderDate).getTime()
+    )
         .slice(0, 5);
     setRecentOrders(sortedOrders);
 
@@ -216,8 +231,7 @@ const AdminDashboard = () => {
 
         const d =
             parseOrderDate(
-                o.createdAt ||
-                o.date
+                o.orderDate
             );
 
         if(
@@ -235,9 +249,7 @@ const AdminDashboard = () => {
             chartConfig[
                 index
                 ].total += parseFloat(
-                o.totalAmount ||
-                o.total ||
-                0
+                o.totalPrice || 0
             );
 
           }
@@ -282,7 +294,7 @@ const AdminDashboard = () => {
       allOrders.forEach(o => {
 
         const d = parseOrderDate(
-            o.createdAt || o.date
+            o.orderDate
         );
 
         if (d >= currentStart && d <= currentEnd) {
@@ -298,9 +310,7 @@ const AdminDashboard = () => {
           if (segment) {
 
             segment.total += parseFloat(
-                o.totalAmount ||
-                o.total ||
-                0
+                o.totalPrice || 0
             );
 
           }
@@ -318,26 +328,25 @@ const AdminDashboard = () => {
     }
 
     // fake trước
-    revenueData.forEach(item => {
-
-      const weekIndex =
-          Math.floor(
-              Math.random()*5
-          );
-
-      chartConfig[
-          weekIndex
-          ].total += item.revenue;
-
-    });
+    // revenueData.forEach(item => {
+    //
+    //   const weekIndex =
+    //       Math.floor(
+    //           Math.random()*5
+    //       );
+    //
+    //   chartConfig[
+    //       weekIndex
+    //       ].total += item.revenue;
+    //
+    // });
 
     // đơn thật cộng thêm
     allOrders.forEach(o => {
 
       const d =
           parseOrderDate(
-              o.createdAt ||
-              o.date
+              o.orderDate
           );
 
       if(
@@ -356,9 +365,7 @@ const AdminDashboard = () => {
         chartConfig[
         week-1
             ].total += parseFloat(
-            o.totalAmount ||
-            o.total ||
-            0
+            o.totalPrice || 0
         );
 
       }
@@ -381,13 +388,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    calculateMetrics();
-    window.addEventListener('xsportDataUpdated', calculateMetrics);
-    window.addEventListener('storage', calculateMetrics);
-    return () => {
-      window.removeEventListener('xsportDataUpdated', calculateMetrics);
-      window.removeEventListener('storage', calculateMetrics);
-    };
+    loadDashboardData();
   }, [timeFilter]);
 
   const getTimeAgo = (dateString) => {
@@ -436,167 +437,533 @@ const AdminDashboard = () => {
       );
     }
   }
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
 
-    const fakeOrdersData = [
-
-      {
-        id: "MS1001",
-        customerName: "Nguyễn Văn A",
-        totalAmount: 450000,
-        createdAt: "27/05/2026",
-        status: "Đã giao"
-      },
-
-      {
-        id: "MS1002",
-        customerName: "Trần Minh B",
-        totalAmount: 655000,
-        createdAt: "28/05/2026",
-        status: "Đang giao"
-      },
-
-      {
-        id: "MS1003",
-        customerName: "Lê Văn C",
-        totalAmount: 950000,
-        createdAt: "29/05/2026",
-        status: "Đã giao"
-      },
-
-      {
-        id: "MS1004",
-        customerName: "Phạm D",
-        totalAmount: 210000,
-        createdAt: "30/05/2026",
-        status: "Chờ xác nhận"
-      },
-
-      {
-        id: "MS1005",
-        customerName: "Hoàng E",
-        totalAmount: 700000,
-        createdAt: "31/05/2026",
-        status: "Đã giao"
-      },
-
-      {
-        id: "MS1006",
-        customerName: "Ngô F",
-        totalAmount: 890000,
-        createdAt: "01/06/2026",
-        status: "Đang xử lý"
-      },
-
-      {
-        id: "MS1007",
-        customerName: "Vũ G",
-        totalAmount: 279000,
-        createdAt: "02/06/2026",
-        status: "Đã giao"
-      }
-
-    ];
-    let filteredOrders = [
-
-      ...fakeOrdersData,
-
-      ...orders
-
-    ];
-    // lọc theo ngày
-    if (fromDate && toDate) {
-
-      const startDate =
-          new Date(fromDate);
-
-      const endDate =
-          new Date(toDate);
-
-      endDate.setHours(
-          23,59,59,999
-      );
-
-      filteredOrders =
-          filteredOrders.filter(order => {
-
-            const orderDate =
-                parseOrderDate(
-                    order.createdAt ||
-                    order.date
-                );
-
-            return (
-                orderDate >= startDate &&
-                orderDate <= endDate
-            );
-
-          });
-
+    if (!fromDate || !toDate) {
+      alert("Vui lòng chọn từ ngày và đến ngày");
+      return;
     }
 
-    const exportData =
-        filteredOrders.map(order => ({
+    try {
 
-          "Mã đơn":
-          order.id,
+      // ==========================
+      // LOAD DANH SÁCH SẢN PHẨM
+      // ==========================
 
-          "Khách hàng":
-              order.customerName ||
-              order.fullName ||
-              "Khách vãng lai",
+      const products = await productService.getAllProducts();
 
-          "Số tiền":
-              order.totalAmount ||
-              order.total ||
-              0,
+      const productMapInfo = {};
 
-          "Ngày đặt":
-              order.createdAt ||
-              order.date,
+      products.forEach(product => {
 
-          "Trạng thái":
-              order.status ||
-              "Đã đặt"
+        productMapInfo[product.tenSanPham] = {
+          brand: product.thuongHieu || "",
+          category: product.loaiSanPham || "",
+          material: product.chatLieu || "",
+          price: product.gia || 0
+        };
 
-        }));
+      });
 
-    const worksheet =
-        XLSX.utils.json_to_sheet(
-            exportData
+      // ==========================
+      // LỌC ĐƠN HÀNG THEO NGÀY
+      // ==========================
+
+      let filteredOrders = [...orders];
+
+      const startDate = new Date(fromDate);
+
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      filteredOrders = filteredOrders.filter(order => {
+
+        const orderDate =
+            parseOrderDate(
+                order.orderDate
+            );
+
+        return (
+            orderDate >= startDate &&
+            orderDate <= endDate
         );
 
-    const workbook =
-        XLSX.utils.book_new();
+      });
 
-    XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Orders"
-    );
+      const workbook =
+          XLSX.utils.book_new();
 
-    const excelBuffer =
-        XLSX.write(
-            workbook,
-            {
-              bookType: "xlsx",
-              type: "array"
-            }
-        );
+      // ==================================================
+      // GOM DỮ LIỆU SẢN PHẨM
+      // ==================================================
 
-    const file =
-        new Blob(
-            [excelBuffer],
-            {
-              type:
-                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            }
-        );
+      const productSalesMap = {};
 
-    saveAs(
-        file,
-        `DonHang_${fromDate || "all"}_${toDate || "all"}.xlsx`
-    );
+      filteredOrders.forEach(order => {
+
+        (order.items || []).forEach(item => {
+
+          const name =
+              item.productName;
+
+          if (!productSalesMap[name]) {
+
+            const info =
+                productMapInfo[name] || {};
+
+            productSalesMap[name] = {
+
+              productName: name,
+
+              brand:
+                  info.brand || "",
+
+              category:
+                  info.category || "",
+
+              material:
+                  info.material || "",
+
+              price:
+                  info.price || 0,
+
+              quantity: 0,
+
+              revenue: 0
+
+            };
+
+          }
+
+          productSalesMap[name].quantity +=
+              item.quantity || 0;
+
+          productSalesMap[name].revenue +=
+              item.totalPrice || 0;
+
+        });
+
+      });
+
+      const productData =
+          Object.values(productSalesMap);
+
+      const totalRevenue =
+          productData.reduce(
+              (sum, p) =>
+                  sum + p.revenue,
+              0
+          );
+
+      const totalSoldQuantity =
+          productData.reduce(
+              (sum, p) =>
+                  sum + p.quantity,
+              0
+          );
+
+      // ==================================================
+      // SHEET 1 : SẢN PHẨM ĐÃ BÁN
+      // ==================================================
+
+      const soldProductsSheetData =
+          productData.map(p => ({
+
+            "Tên sản phẩm":
+            p.productName,
+
+            "Thương hiệu":
+            p.brand,
+
+            "Loại sản phẩm":
+            p.category,
+
+            "Chất liệu":
+            p.material,
+
+            "Giá bán":
+            p.price,
+
+            "Số lượng bán":
+            p.quantity,
+
+            "Doanh thu":
+            p.revenue
+
+          }));
+
+      soldProductsSheetData.push({});
+      soldProductsSheetData.push({});
+
+      soldProductsSheetData.push({
+
+        "Tên sản phẩm":
+            "TỔNG SỐ LƯỢNG ĐÃ BÁN",
+
+        "Số lượng bán":
+        totalSoldQuantity
+
+      });
+
+      soldProductsSheetData.push({
+
+        "Tên sản phẩm":
+            "TỔNG DOANH THU",
+
+        "Doanh thu":
+        totalRevenue
+
+      });
+
+      XLSX.utils.book_append_sheet(
+          workbook,
+          XLSX.utils.json_to_sheet(
+              soldProductsSheetData
+          ),
+          "SanPhamDaBan"
+      );
+
+      // ==================================================
+      // SHEET 2 : TOP 10 BÁN CHẠY
+      // ==================================================
+
+      const top10Products =
+          [...productData]
+              .sort(
+                  (a, b) =>
+                      b.quantity -
+                      a.quantity
+              )
+              .slice(0, 10);
+
+      const top10SheetData =
+          top10Products.map(
+              (p, index) => ({
+
+                "STT":
+                    index + 1,
+
+                "Tên sản phẩm":
+                p.productName,
+
+                "Thương hiệu":
+                p.brand,
+
+                "Loại sản phẩm":
+                p.category,
+
+                "Chất liệu":
+                p.material,
+
+                "Giá bán":
+                p.price,
+
+                "Số lượng bán":
+                p.quantity,
+
+                "Doanh thu":
+                p.revenue
+
+              })
+          );
+
+      XLSX.utils.book_append_sheet(
+          workbook,
+          XLSX.utils.json_to_sheet(
+              top10SheetData
+          ),
+          "Top10BanChay"
+      );
+
+      // ==================================================
+      // SHEET 3 : THEO LOẠI SẢN PHẨM
+      // ==================================================
+
+      const categories = [
+        "Quần áo chạy bộ",
+        "Đồng hồ",
+        "Giày/Dép",
+        "Tất"
+      ];
+
+      const categoryRevenue = {};
+
+      categories.forEach(c => {
+
+        categoryRevenue[c] = {
+          revenue: 0,
+          products: []
+        };
+
+      });
+
+      productData.forEach(product => {
+
+        if (
+            categoryRevenue[
+                product.category
+                ]
+        ) {
+
+          categoryRevenue[
+              product.category
+              ].revenue +=
+              product.revenue;
+
+          categoryRevenue[
+              product.category
+              ].products.push(
+              product
+          );
+
+        }
+
+      });
+
+      const categorySheetData = [];
+
+      categories.forEach(category => {
+
+        categorySheetData.push({
+          "Loại sản phẩm":
+          category
+        });
+
+        categoryRevenue[
+            category
+            ].products.forEach(
+            product => {
+
+              categorySheetData.push({
+
+                "Tên sản phẩm":
+                product.productName,
+
+                "Thương hiệu":
+                product.brand,
+
+                "Chất liệu":
+                product.material,
+
+                "Giá bán":
+                product.price,
+
+                "Số lượng bán":
+                product.quantity,
+
+                "Doanh thu sản phẩm":
+                product.revenue
+
+              });
+
+            });
+
+        const revenue =
+            categoryRevenue[
+                category
+                ].revenue;
+
+        const percent =
+            totalRevenue === 0
+                ? 0
+                : (
+                revenue /
+                totalRevenue
+            ) * 100;
+
+        categorySheetData.push({});
+
+        categorySheetData.push({
+
+          "Loại sản phẩm":
+              `TỔNG ${category.toUpperCase()}`,
+
+          "Doanh thu":
+          revenue,
+
+          "% Doanh thu":
+              `${percent.toFixed(2)}%`
+
+        });
+
+        categorySheetData.push({});
+        categorySheetData.push({});
+
+      });
+
+      XLSX.utils.book_append_sheet(
+          workbook,
+          XLSX.utils.json_to_sheet(
+              categorySheetData
+          ),
+          "TheoLoaiSP"
+      );
+
+      // ==================================================
+      // SHEET 4 : THEO THƯƠNG HIỆU
+      // ==================================================
+
+      const brands = [
+        "ADIDAS",
+        "NIKE",
+        "361",
+        "ATINO",
+        "XSPORTS"
+      ];
+
+      const brandRevenue = {};
+
+      brands.forEach(brand => {
+
+        brandRevenue[brand] = {
+          revenue: 0,
+          products: []
+        };
+
+      });
+
+      productData.forEach(product => {
+
+        const brand =
+            (
+                product.brand ||
+                ""
+            ).toUpperCase();
+
+        if (
+            brandRevenue[brand]
+        ) {
+
+          brandRevenue[
+              brand
+              ].revenue +=
+              product.revenue;
+
+          brandRevenue[
+              brand
+              ].products.push(
+              product
+          );
+
+        }
+
+      });
+
+      const brandSheetData = [];
+
+      brands.forEach(brand => {
+
+        brandSheetData.push({
+          "Thương hiệu":
+          brand
+        });
+
+        brandRevenue[
+            brand
+            ].products.forEach(
+            product => {
+
+              brandSheetData.push({
+
+                "Tên sản phẩm":
+                product.productName,
+
+                "Loại sản phẩm":
+                product.category,
+
+                "Chất liệu":
+                product.material,
+
+                "Giá bán":
+                product.price,
+
+                "Số lượng bán":
+                product.quantity,
+
+                "Doanh thu sản phẩm":
+                product.revenue
+
+              });
+
+            });
+
+        const revenue =
+            brandRevenue[
+                brand
+                ].revenue;
+
+        const percent =
+            totalRevenue === 0
+                ? 0
+                : (
+                revenue /
+                totalRevenue
+            ) * 100;
+
+        brandSheetData.push({});
+
+        brandSheetData.push({
+
+          "Thương hiệu":
+              `TỔNG ${brand}`,
+
+          "Doanh thu":
+          revenue,
+
+          "% Doanh thu":
+              `${percent.toFixed(2)}%`
+
+        });
+
+        brandSheetData.push({});
+        brandSheetData.push({});
+
+      });
+
+      XLSX.utils.book_append_sheet(
+          workbook,
+          XLSX.utils.json_to_sheet(
+              brandSheetData
+          ),
+          "TheoThuongHieu"
+      );
+
+      // ==================================================
+      // EXPORT FILE
+      // ==================================================
+
+      const excelBuffer =
+          XLSX.write(
+              workbook,
+              {
+                bookType: "xlsx",
+                type: "array"
+              }
+          );
+
+      const file =
+          new Blob(
+              [excelBuffer],
+              {
+                type:
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              }
+          );
+
+      saveAs(
+          file,
+          `BaoCao_${fromDate}_${toDate}.xlsx`
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+          "Xuất Excel thất bại"
+      );
+
+    }
 
   };
   const cardStyle = {
@@ -789,9 +1156,10 @@ const AdminDashboard = () => {
           </div>
           <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {recentOrders.length > 0 ? (
-              recentOrders.map((order, idx) => {
-                const name = order.customerName || order.fullName || 'Khách vãng lai';
-                const idStr = order.id.toString().startsWith('#MS') ? order.id : '#MS' + order.id.toString().substring(0,6).toUpperCase();
+              recentOrders.map((order, idx) => {const name =
+                  order.user?.fullName ||
+                  'Khách hàng';
+                const idStr = `#MS${(order.orderId || "").substring(0,6).toUpperCase()}`;
                 return (
                   <div className="activity-item" key={idx} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: idx === recentOrders.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
                     <div className="activity-avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#fffbeb', color: '#ffb800', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
@@ -802,7 +1170,7 @@ const AdminDashboard = () => {
                         Khách hàng <strong style={{ fontWeight: '600', color: '#0f172a' }}>{name}</strong> vừa đặt đơn hàng <strong style={{ fontWeight: '600', color: '#0f172a' }}>{idStr}</strong>
                       </span>
                       <span className="activity-time" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>
-                        {getTimeAgo(order.createdAt || order.date)}
+                        {getTimeAgo(order.orderDate)}
                       </span>
                     </div>
                   </div>
