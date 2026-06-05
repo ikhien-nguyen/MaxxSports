@@ -19,14 +19,18 @@ import java.util.List;
 public class OrderResponse {
 
     String orderId;
+
+    String customerName;
+
+    String email;
+
+    String phone;
     @JsonFormat(
             pattern = "yyyy-MM-dd HH:mm:ss"
     )
     LocalDateTime orderDate;
 
     String province;
-
-//    String ward;
 
     String detailAddress;
 
