@@ -70,6 +70,7 @@ export default function AppRoutes() {
               <Route path="/tre-em" element={<CategoryPage categoryType="gender" categoryValue="tre-em" pageTitle="TRẺ EM" />} />
               <Route path="/outlet" element={<CategoryPage categoryType="status" categoryValue="outlet" pageTitle="OUTLET" />} />
               <Route path="/category" element={<CategoryPage pageTitle="TẤT CẢ SẢN PHẨM" />} />
+              <Route path="/category/:slug" element={<CategoryPage />} />
 
               {/* ── Sport Category Routes ─────────────────────────── */}
               <Route path="/sport/pickleball" element={<CategoryPage categoryType="sport" categoryValue="pickleball" pageTitle="PICKLEBALL" />} />
