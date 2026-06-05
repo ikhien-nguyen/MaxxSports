@@ -1,21 +1,117 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { productDetailDatabase, formatPrice } from '../../data/productDetailData';
 import { categoryProducts } from '../../data/categoryData';
-import {
-  newArrivalsProducts,
-  batMoodProducts,
-  trendingProducts,
-} from '../../data/homeData';
+import { productService } from '../../services/productService';
+
 import './Product.css';
 
-/* ── Flatten all homepage products into one array ─────────── */
-const allHomeProducts = [
-  ...Object.values(newArrivalsProducts).flat(),
-  ...Object.values(batMoodProducts).flat(),
-  ...Object.values(trendingProducts).flat(),
-];
+export function convertBackendProduct(p){
 
+  const colorMap = {
+
+    "CAM": "#FFA500",
+
+    "ĐEN": "#000000",
+    "BLACK": "#000000",
+    "BLACK/SLATE GRAY": "#2F4F4F",
+
+    "XÁM": "#808080",
+    "Mist Gray/Whitestone": "#B0B0B0",
+
+    "XANH DƯƠNG": "#0000FF",
+    "XANH": "#008000",
+    "XANH NEON": "#39FF14",
+    "XANH NGỌC": "#00CED1",
+    "Xanh ngọc": "#00CED1",
+    "XANH LÁ": "#32CD32",
+    "Xanh cổ vịt": "#008B8B",
+    "Xanh than": "#003366",
+    "XANH THAN": "#003366",
+
+    "TURQUOISE/AQUA": "#40E0D0",
+    "Aqua": "#00FFFF",
+
+    "HỒNG": "#FF69B4",
+    "Hồng phấn": "#FFC0CB",
+
+    "ĐỎ": "#FF0000",
+    "Đỏ": "#FF0000",
+
+    "VÀNG": "#FFD700",
+
+    "TRẮNG": "#FFFFFF",
+    "Whitestone": "#F5F5F5",
+
+    "NÂU": "#8B4513",
+
+    "THAN": "#36454F",
+
+    "Tím": "#800080",
+
+    "BERRY/LILAC": "#C8A2C8",
+
+    "Back": "#000000"
+  };
+
+  return {
+
+    id: String(p.maSanPham),
+
+    name: p.tenSanPham,
+
+    brand: p.thuongHieu,
+
+    price: p.gia,
+
+    description: p.moTa,
+
+    images: [
+      ...new Set(
+          (p.productDetails || [])
+              .map(item => item.image)
+              .filter(img => img && img.trim() !== "")
+      )
+    ],
+
+    availableColors: [
+      ...new Map(
+          (p.productDetails || []).map(item => [
+
+            item.mau,
+
+            {
+              name: item.mau,
+
+              hex:
+                  colorMap[item.mau?.trim()] ||
+                  "#999999",
+
+              image: item.image
+            }
+
+          ])
+      ).values()
+    ],
+
+    availableSizes: [
+      ...new Set(
+          p.productDetails?.map(
+              x => x.size
+          ) || []
+      )
+    ],
+
+    sku: String(p.maSanPham),
+
+    category: p.loaiSanPham,
+
+    productType: p.loaiSanPham,
+
+    gender: "Unisex",
+
+    isNew:false
+  };
+}
 /* ── Helper: convert a categoryData product to detail format ── */
 function toCategoryDetail(cp) {
   if (!cp) return null;
@@ -58,40 +154,31 @@ function toCategoryDetail(cp) {
 
 /* ── Helper: convert a homeData product to detail format ─── */
 function toHomeDetail(hp) {
-  if (!hp) return null;
-  const priceStr = hp.price || hp.currentPrice || '0';
-  const priceNum = parseInt(priceStr.replace(/[^\d]/g, ''), 10) || 0;
-  const oldPriceStr = hp.originalPrice;
-  const oldPriceNum = oldPriceStr ? parseInt(oldPriceStr.replace(/[^\d]/g, ''), 10) : null;
-  const sku = hp.id.toUpperCase();
-  const nameContainsSku = hp.name.toUpperCase().includes(sku);
   return {
     id: hp.id,
     name: hp.name,
-    sku: sku,
+    sku: hp.id,
     brand: hp.brand,
-    price: priceNum,
-    oldPrice: oldPriceNum,
+    price: hp.price,
+
     images: [hp.image],
-    availableColors: [{ name: 'Mặc định', hex: hp.dotColor || '#333333' }],
-    availableSizes: ['S', 'M', 'L', 'XL'],
-    category: 'SPORTSWEAR',
-    productType: 'Thể thao',
-    gender: 'Unisex',
-    description: `
-      <h3>${hp.name}</h3>
-      <p>Sản phẩm chính hãng ${hp.brand}. Thiết kế hiện đại, chất liệu cao cấp, phù hợp cho mọi hoạt động thể thao và đời thường.</p>
-      <h4>Đặc điểm nổi bật:</h4>
-      <ul>
-        <li><strong>Thương hiệu:</strong> ${hp.brand} chính hãng 100%</li>
-        <li><strong>Chất liệu:</strong> Cao cấp, thoáng khí</li>
-        <li><strong>Mã sản phẩm:</strong> ${sku}</li>
-      </ul>
-    `,
-    isNew: !hp.originalPrice,
-    _source: 'home',
-    _nameContainsSku: nameContainsSku,
-  };
+
+    availableColors: [
+      ...new Set(
+          hp.productDetails?.map(x => x.mau)
+      )
+    ].map(c => ({
+      name: c,
+      hex: "#333333"
+    })),
+
+    availableSizes: [
+      ...new Set(
+          hp.productDetails?.map(x => x.size)
+      )
+    ],
+    description: hp.description
+  }
 }
 
 /* ── Inline SVG Icons ──────────────────────────────────────── */
@@ -166,35 +253,80 @@ const CheckIcon = () => (
 
 /* ── Product Detail Page Component ─────────────────────────── */
 export default function Product() {
+
   const { id } = useParams();
+
+  const [allHomeProducts, setAllHomeProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   /* ── Look up product: detail DB first, then category fallback ─ */
   const product = useMemo(() => {
-    const detail = productDetailDatabase.find(
-      (p) => String(p.id) === String(id)
-    );
-    if (detail) return detail;
-    const cat = categoryProducts.find(
-      (p) => String(p.id) === String(id)
-    );
-    if (cat) return toCategoryDetail(cat);
-    const home = allHomeProducts.find(
-      (p) => String(p.id) === String(id)
-    );
-    return toHomeDetail(home);
-  }, [id]);
 
+    const home =
+        allHomeProducts.find(
+            (p) => String(p.id) === String(id)
+        );
+
+    if(home) return home;
+
+    return null;
+
+  }, [id, allHomeProducts]);
+  useEffect(() => {
+
+    loadProducts();
+
+  }, []);
+
+  const loadProducts = async () => {
+
+    try {
+
+      const data =
+          await productService.getAllProducts();
+      console.log("DATA API:", data);
+      const formatted =
+          data.map(convertBackendProduct);
+      console.log(formatted[0]);
+      console.log(formatted); // debug xem id backend
+
+      setAllHomeProducts(formatted);
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
   /* ── Related products (same sport/type, exclude current) ──── */
   const relatedProducts = useMemo(() => {
+
     if (!product) return [];
-    const srcCat = categoryProducts.find((p) => String(p.id) === String(id));
-    if (!srcCat) return categoryProducts.slice(0, 5);
-    return categoryProducts
-      .filter((p) => p.id !== srcCat.id && (
-        p.sportType === srcCat.sportType ||
-        p.productType === srcCat.productType
-      ))
-      .slice(0, 5);
+
+    const srcCat =
+        categoryProducts.find(
+            (p) => String(p.id) === String(id)
+        );
+
+    if (!srcCat)
+      return categoryProducts.slice(0,5);
+
+    return categoryProducts.filter(
+        (p)=>
+
+            p.id !== srcCat.id && (
+
+                p.sportType === srcCat.sportType ||
+
+                p.productType === srcCat.productType
+            )
+
+    ).slice(0,5);
+
   }, [id, product]);
 
   /* ── State management ────────────────────────────────────── */
@@ -216,8 +348,10 @@ export default function Product() {
       setAddedToCart(false);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (loading) {
+    return <div>Đang tải sản phẩm...</div>;
+  }
   /* ── 404 if product not found ────────────────────────────── */
   if (!product) {
     return (
@@ -274,7 +408,12 @@ export default function Product() {
   const handleThumbnailClick = (index) => {
     setMainImage(index);
   };
-
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price || 0);
+  };
   const handlePrevImage = () => {
     setMainImage((prev) =>
       prev === 0 ? product.images.length - 1 : prev - 1
@@ -343,7 +482,10 @@ export default function Product() {
               )}
 
               <img
-                src={product.images[mainImage]}
+                  src={
+                      product.images?.[mainImage] ||
+                      "https://via.placeholder.com/500"
+                  }
                 alt={`${product.name} - Ảnh ${mainImage + 1}`}
                 className={`pd-gallery__main-img${isZoomed ? ' pd-gallery__main-img--zoomed' : ''}`}
                 onClick={() => setIsZoomed(!isZoomed)}
@@ -420,7 +562,19 @@ export default function Product() {
                     key={color.name}
                     type="button"
                     className={`pd-color-btn${selectedColor?.name === color.name ? ' pd-color-btn--active' : ''}`}
-                    onClick={() => setSelectedColor(color)}
+                    onClick={() => {
+
+                      setSelectedColor(color);
+
+                      const imageIndex =
+                          product.images.findIndex(
+                              img => img === color.image
+                          );
+
+                      if(imageIndex >= 0){
+                        setMainImage(imageIndex);
+                      }
+                    }}
                     aria-label={`Chọn màu ${color.name}`}
                     aria-pressed={selectedColor?.name === color.name}
                     title={color.name}
@@ -637,7 +791,11 @@ export default function Product() {
                 >
                   <div className="pd-related__img-wrap">
                     {rp.isNew && <span className="pd-related__badge">NEW ARRIVAL</span>}
-                    <img src={rp.image} alt={rp.name} className="pd-related__img" loading="lazy" />
+                    <img
+                        src={rp.images?.[0] || rp.image}
+                        alt={rp.name}
+                        className="pd-related__img"
+                    />
                   </div>
                   <div className="pd-related__info">
                     <span className="pd-related__brand">{rp.brand.toUpperCase()}</span>

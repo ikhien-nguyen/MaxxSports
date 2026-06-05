@@ -14,7 +14,31 @@ import {
   blogPosts,
   promoPosts,
 } from '../../data/homeData'
+import { productService }
+    from '../../services/productService';
+export function convertBackendProduct(p){
 
+    console.log("PRODUCT:", p);
+
+    const imageUrl =
+        p.productDetails?.[0]?.image || p.thumbnail;
+
+    console.log("IMAGE:", imageUrl);
+
+    return {
+        id: String(p.maSanPham),
+        name: p.tenSanPham,
+        image: imageUrl,
+        brand: p.thuongHieu,
+        price: p.gia,
+        currentPrice: p.gia,
+        originalPrice: null,
+        dotColor: "#333333",
+        productType: p.loaiSanPham,
+        genders: ["Unisex"],
+        isNew: false
+    };
+}
 /* ─────────────────────────────────────────────
    INLINE SVG ICONS
 ───────────────────────────────────────────── */
@@ -59,7 +83,9 @@ const BoltIcon = () => (
    PRODUCT CARD — Dual Actions (New Arrivals / Trending)
 ───────────────────────────────────────────── */
 function ProductCard({ id, brand, name, price, image, dotColor }) {
+    console.log(id);
   const productLink = `/product/${id}`
+    console.log("ID click:", id)
 
   const handleAddToCart = (e) => {
     e.preventDefault()
@@ -73,6 +99,7 @@ function ProductCard({ id, brand, name, price, image, dotColor }) {
       image,
       quantity: 1,
     }
+      console.log("CARD ID =", id);
     const existing = JSON.parse(localStorage.getItem('xsport_cart') || '[]')
     localStorage.setItem('xsport_cart', JSON.stringify([...existing, cartItem]))
     window.dispatchEvent(new Event('cartUpdated'))
@@ -83,7 +110,12 @@ function ProductCard({ id, brand, name, price, image, dotColor }) {
     <div className="product-card">
       <Link className="product-card__link" to={productLink} aria-label={`${brand} — ${name}`}>
         <div className="product-card__img-wrap">
-          <img src={image} alt={name} className="product-card__img" loading="lazy" />
+            <img
+                src={image || "/assets/no-image.png"}
+                alt={name}
+                className="product-card__img"
+                loading="lazy"
+            />
         </div>
         <div className="product-card__info">
           <span className="product-card__brand">{brand}</span>
@@ -339,9 +371,9 @@ function LookbookBanners() {
 /* ─────────────────────────────────────────────
    NEW ARRIVALS SECTION
 ───────────────────────────────────────────── */
-function NewArrivals() {
+function NewArrivals({ backendProducts }) {
   const [activeTab, setActiveTab] = useState(newArrivalsTabs[0].id)
-  const products = newArrivalsProducts[activeTab] || []
+    const products = backendProducts || []
   const activeTabData = newArrivalsTabs.find((t) => t.id === activeTab)
 
   return (
@@ -467,39 +499,50 @@ function SportCategories() {
 /* ─────────────────────────────────────────────
    TRENDING SECTION
 ───────────────────────────────────────────── */
-function TrendingSection() {
-  const [activeTab, setActiveTab] = useState(trendingTabs[0].id)
-  const products = trendingProducts[activeTab] || []
-  const activeTabData = trendingTabs.find((t) => t.id === activeTab)
+function TrendingSection({ backendProducts }) {
 
-  return (
-    <section className="product-section" aria-labelledby="trending-title">
-      <div className="section-container">
-        <div className="section-header">
-          <h2 id="trending-title" className="section-title">🔥 TRENDING 🔥</h2>
-          <SectionTabs
-            tabs={trendingTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
+    return (
 
-        <div className="product-grid" role="tabpanel">
-          {products.length > 0 ? (
-            products.map((p) => (
-              <ProductCard key={p.id} {...p} />
-            ))
-          ) : (
-            <p className="product-grid__empty">Sản phẩm sắp ra mắt.</p>
-          )}
-        </div>
+        <section className="product-section">
 
-        {products.length > 0 && (
-          <ViewAllBtn href={activeTabData?.href || '#redirect'} />
-        )}
-      </div>
-    </section>
-  )
+            <div className="section-container">
+
+                <div className="section-header">
+
+                    <h2 className="section-title">
+                        🔥 TRENDING 🔥
+                    </h2>
+
+                </div>
+
+                <div className="product-grid">
+
+                    {backendProducts.length > 0 ? (
+
+                        backendProducts.map(product => (
+
+                            <ProductCard
+                                key={product.id}
+                                {...product}
+                            />
+
+                        ))
+
+                    ) : (
+
+                        <p className="product-grid__empty">
+                            Không có sản phẩm
+                        </p>
+
+                    )}
+
+                </div>
+
+            </div>
+
+        </section>
+
+    );
 }
 
 /* ─────────────────────────────────────────────
@@ -580,15 +623,48 @@ function BlogNewsSection() {
    HOME PAGE ROOT
 ───────────────────────────────────────────── */
 export default function Home() {
+    const [products,
+        setProducts]
+        = useState([]);
+    useEffect(()=>{
+
+        fetchProducts();
+
+    },[]);
+
+    const fetchProducts = async () => {
+        try {
+
+            const data = await productService.getAllProducts();
+
+            console.log("DATA API:", data);
+
+            if (!Array.isArray(data)) {
+                console.log("Không phải array:", data);
+                return;
+            }
+
+            const formatted = data.map(convertBackendProduct);
+
+            console.log("FORMATTED:", formatted);
+
+            setProducts(formatted);
+
+        } catch(error) {
+
+            console.log("ERROR:", error);
+
+        }
+    }
   return (
     <main className="home-page">
       <HeroSlider />
       <LookbookBanners />
-      <NewArrivals />
+        <NewArrivals backendProducts={products} />
       <TennisPromoBanner />
       <BatMoodSection />
       <SportCategories />
-      <TrendingSection />
+        <TrendingSection backendProducts={products} />
       <StoreNearby />
       <BlogNewsSection />
     </main>

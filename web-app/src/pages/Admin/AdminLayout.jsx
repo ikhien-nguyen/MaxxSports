@@ -6,6 +6,8 @@ import AdminProducts from './AdminProducts';
 import AdminCategories from './AdminCategories';
 import AdminCustomers from './AdminCustomers';
 
+import { authService } from '../../services/authService';
+
 // --- Icons ---
 const GridIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -134,17 +136,17 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <button 
-          className="admin-logout-btn" 
-          onClick={() => { 
-            localStorage.removeItem('xsport_user'); 
-            window.dispatchEvent(new Event('xsportDataUpdated')); 
-            window.location.href = '/auth'; 
-          }}
-        >
-          <ExitIcon />
-          Đăng xuất
-        </button>
+          <button
+              className="admin-logout-btn"
+              onClick={async () => {
+                  await authService.logout();
+
+                  window.location.href = '/auth';
+              }}
+          >
+              <ExitIcon />
+              Đăng xuất
+          </button>
       </aside>
 
       {/* Main Content Area */}

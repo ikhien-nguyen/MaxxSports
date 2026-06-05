@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import './Category.css';
+import { productService } from '../../services/productService';
+import { convertBackendProduct } from '../Home/Home';
 import {
   categoryProducts,
   BRANDS,
@@ -13,7 +15,6 @@ import {
   SORT_OPTIONS,
   formatVND,
 } from '../../data/categoryData';
-
 /* ── Constants ──────────────────────────────────────────────── */
 const PRODUCTS_PER_PAGE = 12;
 
@@ -107,7 +108,12 @@ function CpProductCard({ product, onAddToCart }) {
         aria-label={`${brand} — ${name}`}
       >
         <div className="cp-card__img-wrap">
-          <img src={image} alt={name} className="cp-card__img" loading="lazy" />
+          <img
+              src={product.image}
+              alt={product.name}
+              className="cp-card__img"
+              onError={(e)=>console.log(product)}
+          />
         </div>
         <div className="cp-card__info">
           <span className="cp-card__brand">{brand}</span>
@@ -223,6 +229,8 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
   const [sortType, setSortType] = useState('default');
   const [currentPage, setCurrentPage] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   /* Close sidebar on desktop resize */
   useEffect(() => {
@@ -240,6 +248,28 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
       document.body.style.overflow = '';
     };
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getAllProducts();
+
+        const formatted =
+            data.map(convertBackendProduct);
+
+        setProducts(formatted);
+        console.log("Products:", formatted);
+
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
 
   /* Toggle filter value */
   const handleFilterChange = (filterKey, value) => {
@@ -268,7 +298,7 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
   /* Filter + sort logic */
   const filteredProducts = useMemo(() => {
     /* Step 1: Pre-filter by category route */
-    let result = [...categoryProducts];
+    let result = [...products];
     if (categoryType === 'gender') {
       result = result.filter((p) => p.gender === categoryValue);
     } else if (categoryType === 'sport') {
@@ -286,9 +316,13 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
         filters.brands.some((b) => p.brand.toLowerCase() === b.toLowerCase())
       );
     }
-    if (filters.productLines.length) {
-      result = result.filter((p) =>
-        p.productLines.some((l) => filters.productLines.includes(l))
+    if (filters.productLines.length > 0) {
+      result = result.filter(
+          (p) =>
+              Array.isArray(p.productLines) &&
+              p.productLines.some((l) =>
+                  filters.productLines.includes(l)
+              )
       );
     }
     if (filters.priceRanges.length) {
@@ -302,19 +336,33 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
     if (filters.productTypes.length) {
       result = result.filter((p) => filters.productTypes.includes(p.productType));
     }
-    if (filters.genders.length) {
-      result = result.filter((p) =>
-        p.genders.some((g) => filters.genders.includes(g))
+    if (filters.genders.length > 0) {
+      result = result.filter(
+          (p) =>
+              Array.isArray(p.genders) &&
+              p.genders.some((g) =>
+                  filters.genders.includes(g)
+              )
       );
     }
-    if (filters.clothingSizes.length) {
-      result = result.filter((p) =>
-        p.clothingSizes.some((s) => filters.clothingSizes.includes(s))
+
+    if (filters.clothingSizes.length > 0) {
+      result = result.filter(
+          (p) =>
+              Array.isArray(p.clothingSizes) &&
+              p.clothingSizes.some((s) =>
+                  filters.clothingSizes.includes(s)
+              )
       );
     }
-    if (filters.shoeSizes.length) {
-      result = result.filter((p) =>
-        p.shoeSizes.some((s) => filters.shoeSizes.includes(s))
+
+    if (filters.shoeSizes.length > 0) {
+      result = result.filter(
+          (p) =>
+              Array.isArray(p.shoeSizes) &&
+              p.shoeSizes.some((s) =>
+                  filters.shoeSizes.includes(s)
+              )
       );
     }
 
@@ -324,9 +372,9 @@ export default function CategoryPage({ categoryType = 'all', categoryValue = '',
       result = [...result].sort((a, b) => b.price - a.price);
     else if (sortType === 'name-asc')
       result = [...result].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-
+    console.log("Filtered:", result);
     return result;
-  }, [filters, sortType, categoryType, categoryValue]);
+  }, [products, filters, sortType, categoryType, categoryValue]);
 
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(

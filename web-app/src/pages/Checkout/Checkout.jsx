@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice } from '../../data/productDetailData';
+import { orderService } from '../../services/orderService';
+import { paymentService } from '../../services/paymentService';
+import { QRCodeSVG } from 'qrcode.react';
 import './Checkout.css';
 
 /* ── Inline SVG Icons ──────────────────────────────────────── */
@@ -169,6 +172,8 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [errors, setErrors] = useState({});
   const [showVNPayModal, setShowVNPayModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [realVnpayUrl, setRealVnpayUrl] = useState("");
 
   /* ── Form handlers ── */
   const handleChange = (e) => {
@@ -248,19 +253,75 @@ export default function Checkout() {
   };
 
   /* ── Submit order ── */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) return; // Form không hợp lệ thì dừng lại
 
-    if (paymentMethod === 'vnpay') {
-      setShowVNPayModal(true);
-      setTimeout(() => {
-        createOrder();
-        window.location.href = '/success';
-      }, 7000);
-    } else {
-      createOrder();
-      window.location.href = '/success';
+    setIsProcessing(true); // Khóa nút bấm
+
+    try {
+      // 1. Nối địa chỉ thành 1 chuỗi hoàn chỉnh gửi Backend
+      const fullAddress = [form.address, form.ward, form.district, form.city]
+          .filter(Boolean) // Lọc bỏ các trường bị rỗng
+          .join(', ');
+
+      // 2. Chuyển đổi giỏ hàng sang định dạng items mà Backend yêu cầu
+      const orderItems = cartItems.map(item => ({
+        // Lưu ý: Đảm bảo lúc thêm vào giỏ hàng, bạn đã lưu productDetailId của sản phẩm
+        productDetailId: item.productDetailId || item.id,
+        quantity: item.quantity || 1
+      }));
+
+      // 3. Đóng gói DTO gửi xuống Spring Boot
+      const checkoutRequest = {
+        detailAddress: fullAddress,
+        shippingMethod: "STANDARD", // Bạn có thể thêm UI chọn phương thức sau, tạm fix cứng
+        paymentMethod: paymentMethod === 'vnpay' ? "VNPAY" : "COD",
+        items: orderItems
+      };
+
+      // 4. GỌI API QUA SERVICE
+      const response = await orderService.checkout(checkoutRequest);
+
+      // 5. XỬ LÝ KẾT QUẢ TỪ BACKEND
+      if (response && response.result) {
+
+        // Đặt hàng thành công -> Xóa giỏ hàng LocalStorage
+        localStorage.removeItem('xsport_cart');
+        window.dispatchEvent(new Event('cartUpdated'));
+
+        // Lấy mã đơn hàng từ Backend trả về (Giả sử trường id lưu mã đơn hàng)
+        const orderId = response.result.orderId;
+
+        // --- XỬ LÝ THANH TOÁN ---
+        if (paymentMethod === 'vnpay') {
+          try {
+            // Lấy link VNPAY thật
+            const vnpayUrl = await paymentService.createVNPayUrl(orderId);
+
+            if (vnpayUrl) {
+              setRealVnpayUrl(vnpayUrl);
+              setShowVNPayModal(true);
+              setIsProcessing(false);
+            } else {
+              alert("Lỗi: Không nhận được URL thanh toán VNPAY từ máy chủ.");
+              setIsProcessing(false);
+            }
+          } catch (paymentError) {
+            console.error("Lỗi khi tạo link VNPAY:", paymentError);
+            alert("Không thể kết nối với cổng thanh toán VNPAY lúc này.");
+            setIsProcessing(false);
+          }
+        } else {
+          // Nếu là COD, lưu tạm mã đơn hàng để trang Success hiển thị
+          localStorage.setItem('xsport_last_order', JSON.stringify(response.result));
+          window.location.href = '/success';
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi đặt hàng:", error);
+      alert("Đã xảy ra lỗi trong quá trình đặt hàng. Vui lòng thử lại!");
+      setIsProcessing(false);
     }
   };
 
@@ -304,21 +365,22 @@ export default function Checkout() {
         </div>
 
         <div className="checkout-vnpay-qr">
-          {/* Fake QR code using CSS grid pattern */}
           <div className="checkout-vnpay-qr__code" aria-label="Mã QR thanh toán">
-            <div className="qr-pattern">
-              {Array.from({ length: 169 }, (_, i) => (
-                <div
-                  key={i}
-                  className={`qr-cell ${Math.random() > 0.45 ? 'qr-cell--filled' : ''}`}
-                />
-              ))}
-              {/* Corner markers */}
-              <div className="qr-corner qr-corner--tl" />
-              <div className="qr-corner qr-corner--tr" />
-              <div className="qr-corner qr-corner--bl" />
-            </div>
+            {/* HIỂN THỊ MÃ QR THẬT TỪ LINK VNPAY */}
+            {realVnpayUrl ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '10px', background: 'white', borderRadius: '8px' }}>
+                  <QRCodeSVG value={realVnpayUrl} size={180} />
+                </div>
+            ) : (
+                <p>Đang tải mã...</p>
+            )}
           </div>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '15px' }}>
+          <a href={realVnpayUrl} style={{ color: '#005baa', textDecoration: 'underline' }}>
+            Hoặc bấm vào đây để thanh toán ngay
+          </a>
         </div>
 
         <div className="checkout-vnpay-amount">
@@ -679,8 +741,13 @@ export default function Checkout() {
               </div>
 
               {/* Submit button */}
-              <button type="submit" className="checkout-submit-btn" id="place-order-btn">
-                {paymentMethod === 'vnpay' ? 'THANH TOÁN VỚI VNPAY' : 'ĐẶT HÀNG'}
+              <button
+                  type="submit"
+                  className="checkout-submit-btn"
+                  id="place-order-btn"
+                  disabled={isProcessing} // Khóa nút khi đang gọi API
+              >
+                {isProcessing ? 'ĐANG XỬ LÝ...' : (paymentMethod === 'vnpay' ? 'THANH TOÁN VỚI VNPAY' : 'ĐẶT HÀNG')}
               </button>
 
               {/* Trust badges */}

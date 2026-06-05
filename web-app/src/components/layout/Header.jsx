@@ -2,6 +2,32 @@ import React, { useState, useEffect, useRef } from 'react';
 import { categoryProducts } from '../../data/categoryData';
 import { formatPrice } from '../../data/productDetailData';
 import './Header.css';
+import {authService} from "../../services/authService.js";
+import { productService } from "../../services/productService";
+
+export function convertBackendProduct(p){
+
+  console.log("PRODUCT:", p);
+
+  const imageUrl =
+      p.productDetails?.[0]?.image || p.thumbnail;
+
+  console.log("IMAGE:", imageUrl);
+
+  return {
+    id: String(p.maSanPham),
+    name: p.tenSanPham,
+    image: imageUrl,
+    brand: p.thuongHieu,
+    price: p.gia,
+    currentPrice: p.gia,
+    originalPrice: null,
+    dotColor: "#333333",
+    productType: p.loaiSanPham,
+    genders: ["Unisex"],
+    isNew: false
+  };
+}
 
 /* ── Nav data ──────────────────────────────────────────────── */
 const sportsCategories = [
@@ -21,7 +47,7 @@ const navLinks = [
   { label: 'NỮ', href: '/nu' },
   { label: 'TRẺ EM', href: '/tre-em' },
   { label: 'OUTLET', href: '/outlet', highlight: true },
-  { label: 'CỬA HÀNG', href: '/category' },
+  { label: 'CỬA HÀNG', href: '/stores' }, // sửa
 ];
 
 const mobileNavLinks = [
@@ -32,7 +58,7 @@ const mobileNavLinks = [
   { label: 'NỮ', href: '/nu' },
   { label: 'TRẺ EM', href: '/tre-em' },
   { label: 'OUTLET', href: '/outlet', highlight: true },
-  { label: 'CỬA HÀNG', href: '/category' },
+  { label: 'CỬA HÀNG', href: '/stores' },
 ];
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
@@ -128,6 +154,24 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState([]);
   const [isFocused, setIsFocused] = useState(false);
   const searchRef = useRef(null);
+  const [allProducts, setAllProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getAllProducts();
+
+        const formatted = data.map(convertBackendProduct);
+
+        setAllProducts(formatted);
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   /* ── Load user from localStorage on mount ──────────────────── */
   useEffect(() => {
@@ -190,32 +234,25 @@ export default function Header() {
 
     /* 1. Fetch products from localStorage (future backend)
        Fallback to static categoryProducts from data file */
-    let allProducts = [];
-    try {
-      const stored = localStorage.getItem('xsport_products');
-      if (stored) {
-        allProducts = JSON.parse(stored);
-      }
-    } catch { /* ignore */ }
-
-    /* If localStorage is empty, use imported static data */
-    if (allProducts.length === 0) {
-      allProducts = categoryProducts;
-    }
-
-    /* 2. Imperative filter: name.toLowerCase().includes(query) */
     const matched = [];
+
     for (let i = 0; i < allProducts.length; i++) {
       const product = allProducts[i];
-      if (product.name && product.name.toLowerCase().includes(query)) {
+
+      if (
+          product.name &&
+          product.name.toLowerCase().includes(query)
+      ) {
         matched.push(product);
       }
-      /* 3. Limit to Top 5 */
+
       if (matched.length >= 5) break;
     }
 
+    /* 2. Imperative filter: name.toLowerCase().includes(query) */
+
     setSuggestions(matched);
-  }, [searchQuery]);
+  }, [searchQuery,allProducts]);
 
   /* ── Handle suggestion click → navigate ────────────────────── */
   const handleSuggestionClick = (product) => {
@@ -226,7 +263,8 @@ export default function Header() {
   };
 
   /* ── Logout handler: backup cart → clear → remove user ────── */
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // 1. Sao lưu giỏ hàng của user hiện tại vào local trước khi xóa
     if (currentUser?.email) {
       try {
         const currentCart = localStorage.getItem('xsport_cart') || '[]';
@@ -234,13 +272,15 @@ export default function Header() {
       } catch { /* ignore */ }
     }
 
-    localStorage.setItem('xsport_cart', '[]');
-    localStorage.removeItem('xsport_user');
-    window.dispatchEvent(new Event('cartUpdated'));
+    await authService.logout();
 
+    // Cập nhật  các State tại chỗ để ẩn menu Avatar nhanh lập tức
     setCurrentUser(null);
     setUserDropdownOpen(false);
-    window.location.href = '/';
+    setIsMobileMenuOpen(false);
+
+    // 4. Điều hướng về trang auth
+    window.location.href = '/auth';
   };
 
   /* Show dropdown if focused AND (has query text) */

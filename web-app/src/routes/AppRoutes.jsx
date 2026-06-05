@@ -14,7 +14,8 @@ import MainLayout from '../components/layout/MainLayout';
 import AdminLayout from '../pages/Admin/AdminLayout';
 import StaticInfoPage from '../pages/StaticInfo/StaticInfoPage';
 import { staticPages } from '../pages/StaticInfo/staticContent';
-
+import StorePage from '../pages/StorePage.jsx';
+import PaymentResult from '../pages/Payment/PaymentResult';
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('xsport_user') || 'null');
   if (!user || user.role !== 'ADMIN') {
@@ -44,14 +45,20 @@ export default function AppRoutes() {
           <MainLayout>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/stores" element={<StorePage />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/product/:id" element={<Product />} />
-              
+              <Route
+                  path="/stores"
+                  element={<StorePage />}
+              />
               {/* Customer Only Routes */}
               <Route path="/cart" element={<CustomerRoute><Cart /></CustomerRoute>} />
               <Route path="/account" element={<CustomerRoute><Account /></CustomerRoute>} />
               <Route path="/checkout" element={<CustomerRoute><Checkout /></CustomerRoute>} />
               <Route path="/success" element={<CustomerRoute><Success /></CustomerRoute>} />
+
+              <Route path="/payment-result" element={<PaymentResult />} />
               
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment-management" element={<PaymentManagement />} />
