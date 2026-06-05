@@ -161,7 +161,7 @@ export default function Cart() {
               Bạn chưa thêm sản phẩm nào vào giỏ hàng.
               <br />Khám phá các sản phẩm mới nhất ngay!
             </p>
-            <a href="/new-arrivals" className="btn-continue cart-empty__btn">
+            <a href="/category" className="btn-continue cart-empty__btn">
               Tiếp tục mua sắm
             </a>
           </div>

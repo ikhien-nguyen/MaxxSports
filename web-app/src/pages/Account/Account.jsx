@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice } from '../../data/productDetailData';
-import { userService } from '../../services/userService'; // 🚀 IMPORT USER SERVICE
-import { authService } from '../../services/authService'; // 🚀 IMPORT AUTH SERVICE
+import { userService } from '../../services/userService';
+import { authService } from '../../services/authService';
+import { orderService } from '../../services/orderService';
 import './Account.css';
 
 /* ── SVG Icons ─────────────────────────────────────────────── */
@@ -28,26 +29,28 @@ const GiftIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="no
 const HandshakeIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>);
 const TruckMiniIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13" rx="1" /><path d="M16 8h4l3 4v5h-7V8z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>);
 const TrophyIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9H3V5a1 1 0 011-1h2" /><path d="M18 9h3V5a1 1 0 00-1-1h-2" /><path d="M4 22h16" /><path d="M10 22V16" /><path d="M14 22V16" /><path d="M18 4v5a6 6 0 01-12 0V4" /></svg>);
+
 const TIMELINE_ICONS = [GiftIcon, HandshakeIcon, TruckMiniIcon, TrophyIcon];
-
-/* ── Order Helper ── */
-function loadOrders(userEmail) {
-  try {
-    const allOrders = JSON.parse(localStorage.getItem('xsport_orders') || '[]');
-    if (!userEmail) return [];
-    return allOrders.filter(order => order.customerEmail === userEmail || order.email === userEmail);
-  } catch {
-    return [];
-  }
-}
-
+const TIMELINE_STEPS = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Hoàn thành'];
 const STATUS_CONFIG = {
   'Chờ xác nhận': { color: '#888888', bg: '#f5f5f5', step: 0 },
   'Đã xác nhận': { color: '#2563eb', bg: '#eff6ff', step: 1 },
   'Đang giao hàng': { color: '#d97706', bg: '#fffbeb', step: 2 },
   'Hoàn thành': { color: '#16a34a', bg: '#f0fdf4', step: 3 },
+  'Đã hủy': { color: '#dc2626', bg: '#fef2f2', step: -1 },
 };
-const TIMELINE_STEPS = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Hoàn thành'];
+
+/* Hàm map trạng thái từ Backend sang Tiếng Việt */
+const mapBackendStatusToVN = (statusStr) => {
+  if (!statusStr) return 'Chờ xác nhận';
+  const s = statusStr.toUpperCase();
+  if (s === 'CHO_THANH_TOAN' || s === 'PENDING') return 'Chờ xác nhận';
+  if (s === 'CONFIRMED') return 'Đã xác nhận';
+  if (s === 'SHIPPING') return 'Đang giao hàng';
+  if (s === 'COMPLETED') return 'Hoàn thành';
+  if (s === 'CANCELLED') return 'Đã hủy';
+  return 'Chờ xác nhận';
+};
 
 const NAV_ITEMS = [
   { key: 'profile', label: 'Thông tin tài khoản', icon: UserIcon },
@@ -55,6 +58,14 @@ const NAV_ITEMS = [
   { key: 'addresses', label: 'Sổ địa chỉ', icon: MapPinIcon },
   { key: 'password', label: 'Đổi mật khẩu', icon: LockIcon },
 ];
+
+/* ─────────────────────────────────────────────
+   HÀM CHẶN CLICK MODULE FAKE
+───────────────────────────────────────────── */
+const handleFakeClick = (e) => {
+  e.preventDefault();
+  alert('Module này đang được cập nhật. Vui lòng quay lại sau!');
+};
 
 /* ══════════════════════════════════════════════════════════════
    ACCOUNT PAGE COMPONENT
@@ -73,34 +84,58 @@ export default function Account() {
     catch { return {}; }
   });
   const [activeTab, setActiveTab] = useState('profile');
-  const [isLoading, setIsLoading] = useState(false); // Thêm loading khi gọi API
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingOrders, setIsFetchingOrders] = useState(false);
 
   /* ── State Profile ── */
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', phone: '', email: '' });
   const [saveMsg, setSaveMsg] = useState('');
-  const fileInputRef = useRef(null);
 
   /* ── State Đổi mật khẩu ── */
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState({ type: '', text: '' });
   const [showPw, setShowPw] = useState({ current: false, newPw: false, confirm: false });
 
-  /* ── State Đơn hàng ── */
-  const [orders, setOrders] = useState(() => loadOrders(user.email));
+  /* ── State Đơn hàng (REAL API) ── */
+  const [orders, setOrders] = useState([]);
 
-  /* ── Sync Data ── */
+  /* 🚀 LẤY DỮ LIỆU ĐƠN HÀNG TỪ BACKEND */
   useEffect(() => {
-    const refresh = () => setOrders(loadOrders(user.email));
-    window.addEventListener('xsportDataUpdated', refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener('xsportDataUpdated', refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, [user.email]);
+    if (activeTab === 'orders') {
+      const fetchMyOrders = async () => {
+        setIsFetchingOrders(true);
+        try {
+          // Gọi API thật của User
+          const response = await orderService.getMyOrders();
+          const myOrders = response?.result || [];
 
-  /* ── State Địa chỉ ── */
+          // Map dữ liệu để render lên UI
+          const formattedOrders = myOrders.map(o => ({
+            id: o.orderId,
+            date: o.orderDate || o.createdAt,
+            status: mapBackendStatusToVN(o.orderStatus),
+            total: o.totalPrice,
+            items: (o.items || o.cart || []).map(item => ({
+              name: item.productName,
+              qty: item.quantity || item.qty || 1, // Fix lỗi trường quantity
+              price: item.price
+            }))
+          }));
+
+          // Sắp xếp đơn mới nhất lên đầu
+          setOrders(formattedOrders.reverse());
+        } catch (error) {
+          console.error("Lỗi khi tải đơn hàng:", error);
+        } finally {
+          setIsFetchingOrders(false);
+        }
+      };
+      fetchMyOrders();
+    }
+  }, [activeTab]);
+
+  /* ── Các State Địa chỉ (Giữ nguyên cấu trúc nhưng bị ẩn bởi FakeClick) ── */
   const ADDR_KEY = `xsport_addresses_${user.email || 'guest'}`;
   const [addresses, setAddresses] = useState(() => {
     try { return JSON.parse(localStorage.getItem(ADDR_KEY)) || []; } catch { return []; }
@@ -112,66 +147,11 @@ export default function Account() {
   const [addrErrors, setAddrErrors] = useState({});
   const [addrMsg, setAddrMsg] = useState('');
 
-  const saveAddresses = (list) => { setAddresses(list); localStorage.setItem(ADDR_KEY, JSON.stringify(list)); };
-  const openAddrAdd = () => { setEditingAddr(null); setAddrForm({ ...emptyAddr, isDefault: addresses.length === 0 }); setAddrErrors({}); setShowAddrForm(true); };
-  const openAddrEdit = (addr) => { setEditingAddr(addr.id); setAddrForm({ ...addr }); setAddrErrors({}); setShowAddrForm(true); };
-  const closeAddrForm = () => { setShowAddrForm(false); setEditingAddr(null); setAddrErrors({}); };
-
-  const validateAddr = () => {
-    const e = {};
-    if (!addrForm.name.trim()) e.name = 'Bắt buộc';
-    if (!addrForm.phone.trim()) e.phone = 'Bắt buộc';
-    else if (!/^[0-9]{9,11}$/.test(addrForm.phone.replace(/\s/g, ''))) e.phone = 'Không hợp lệ';
-    if (!addrForm.city.trim()) e.city = 'Bắt buộc';
-    if (!addrForm.street.trim()) e.street = 'Bắt buộc';
-    setAddrErrors(e); return Object.keys(e).length === 0;
-  };
-
-  const handleSaveAddr = () => {
-    if (!validateAddr()) return;
-    let list;
-    if (editingAddr) {
-      list = addresses.map(a => a.id === editingAddr ? { ...addrForm, id: editingAddr } : a);
-    } else {
-      list = [...addresses, { ...addrForm, id: Date.now().toString() }];
-    }
-    if (addrForm.isDefault) list = list.map(a => ({ ...a, isDefault: a.id === (editingAddr || list[list.length - 1].id) }));
-    saveAddresses(list); closeAddrForm();
-    setAddrMsg(editingAddr ? 'Cập nhật địa chỉ thành công!' : 'Thêm địa chỉ thành công!');
-    setTimeout(() => setAddrMsg(''), 3000);
-  };
-
-  const handleDeleteAddr = (id) => {
-    const list = addresses.filter(a => a.id !== id);
-    if (list.length > 0 && !list.some(a => a.isDefault)) list[0].isDefault = true;
-    saveAddresses(list);
-    setAddrMsg('Đã xóa địa chỉ.'); setTimeout(() => setAddrMsg(''), 3000);
-  };
-
-  const handleSetDefault = (id) => {
-    const list = addresses.map(a => ({ ...a, isDefault: a.id === id }));
-    saveAddresses(list);
-  };
-
   const PROVINCES = ['TP. Hồ Chí Minh','Hà Nội','Đà Nẵng','Hải Phòng','Cần Thơ','Bình Dương','Đồng Nai','Khánh Hòa','Lâm Đồng','Thừa Thiên Huế','Quảng Ninh','Bà Rịa - Vũng Tàu','Long An','An Giang','Nghệ An'];
 
   useEffect(() => {
     setEditForm({ name: user.name || '', phone: user.phone || '', email: user.email || '' });
   }, [user.name, user.phone, user.email]);
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { alert('Vui lòng chọn file ảnh.'); return; }
-    if (file.size > 2 * 1024 * 1024) { alert('Ảnh tối đa 2MB.'); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const updated = { ...user, avatar: reader.result };
-      setUser(updated);
-      localStorage.setItem('xsport_user', JSON.stringify(updated));
-    };
-    reader.readAsDataURL(file);
-  };
 
   /* 🚀 LUỒNG GỌI API: Lưu hồ sơ cá nhân */
   const handleSaveProfile = async () => {
@@ -179,21 +159,19 @@ export default function Account() {
     setIsLoading(true);
 
     try {
-      // Gọi lên Backend update profile
       await userService.updateProfile({
         name: editForm.name.trim(),
         phone: editForm.phone.trim(),
-        address: '' // Gửi tạm chuỗi rỗng nếu DTO backend yêu cầu
+        address: ''
       });
 
-      // Cập nhật State và Session nội bộ sau khi API OK
       const updated = { ...user, name: editForm.name.trim(), phone: editForm.phone.trim() };
       setUser(updated);
       localStorage.setItem('xsport_user', JSON.stringify(updated));
 
       setIsEditing(false);
       setSaveMsg('Cập nhật thông tin thành công!');
-      window.dispatchEvent(new Event('xsportDataUpdated')); // Bắn tín hiệu để đổi tên trên Header
+      window.dispatchEvent(new Event('xsportDataUpdated'));
     } catch (error) {
       alert(error || 'Cập nhật thất bại. Vui lòng thử lại.');
     } finally {
@@ -217,7 +195,6 @@ export default function Account() {
         newPassword: pwForm.newPw
       });
 
-      // Dựa vào message trả về từ Backend để phán đoán thành công/thất bại
       if (res.result && res.result.message === "Đổi mật khẩu thành công") {
         setPwMsg({ type: 'success', text: 'Đổi mật khẩu thành công!' });
         setPwForm({ current: '', newPw: '', confirm: '' });
@@ -234,11 +211,9 @@ export default function Account() {
 
   /* 🚀 LUỒNG GỌI API: Đăng xuất tập trung */
   const handleLogout = async () => {
-    // Lưu giỏ hàng phụ tạm thời
     if (user.email) {
       try { localStorage.setItem(`saved_cart_${user.email}`, localStorage.getItem('xsport_cart') || '[]'); } catch {}
     }
-    // Gọi thẳng service để khai tử token & xóa rác
     await authService.logout();
   };
 
@@ -258,7 +233,8 @@ export default function Account() {
           <div className="acc-layout">
             <aside className="acc-sidebar">
               <div className="acc-profile-card">
-                <div className="acc-avatar-wrap" onClick={() => fileInputRef.current?.click()}>
+                {/* 🔒 Chặn thay đổi ảnh đại diện */}
+                <div className="acc-avatar-wrap" onClick={handleFakeClick}>
                   {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="acc-avatar-img" />
                   ) : (
@@ -267,7 +243,6 @@ export default function Account() {
                   <div className="acc-avatar-overlay" aria-label="Đổi ảnh đại diện">
                     <CameraIcon />
                   </div>
-                  <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
                 </div>
                 <h3 className="acc-profile-name">{user.name || 'Khách hàng'}</h3>
                 <span className="acc-profile-email">{user.email || ''}</span>
@@ -280,7 +255,14 @@ export default function Account() {
                         key={key}
                         type="button"
                         className={`acc-nav__item${activeTab === key ? ' acc-nav__item--active' : ''}`}
-                        onClick={() => setActiveTab(key)}
+                        onClick={(e) => {
+                          // 🔒 Chặn click vào tab Sổ địa chỉ
+                          if (key === 'addresses') {
+                            handleFakeClick(e);
+                          } else {
+                            setActiveTab(key);
+                          }
+                        }}
                     >
                       <Icon /><span>{label}</span>
                     </button>
@@ -314,7 +296,6 @@ export default function Account() {
                           </div>
                           <div className="acc-form__field">
                             <label className="acc-form__label">Email (Không thể thay đổi)</label>
-                            {/* Email là key cố định nên chuyển thành readonly để bảo mật và tránh lỗi logic hệ thống */}
                             <input type="email" className="acc-form__input" style={{ backgroundColor: '#f5f5f5', color: '#888' }} value={editForm.email} readOnly />
                           </div>
                           <div className="acc-form__field">
@@ -342,59 +323,77 @@ export default function Account() {
                   </section>
               )}
 
-              {/* Các Tab Đơn hàng, Địa chỉ giữ nguyên cấu trúc cũ */}
-              {activeTab === 'orders' && ( /* ... HTML Orders ... */
+              {/* PHẦN ĐƠN HÀNG LẤY TỪ REAL DATA (API) */}
+              {activeTab === 'orders' && (
                   <section className="acc-section">
                     <div className="acc-section__header">
                       <h2 className="acc-section__title">Đơn hàng của tôi</h2>
                       <span className="acc-section__count">{orders.length} đơn hàng</span>
                     </div>
-                    {orders.length === 0 ? (
+
+                    {isFetchingOrders ? (
+                        <div className="acc-empty">
+                          <h3>Đang tải dữ liệu đơn hàng...</h3>
+                        </div>
+                    ) : orders.length === 0 ? (
                         <div className="acc-empty">
                           <ShoppingBagIcon />
                           <h3>Bạn chưa có đơn hàng nào</h3>
                           <p>Hãy khám phá các sản phẩm mới nhất!</p>
-                          <Link to="/new-arrivals" className="acc-btn acc-btn--primary">Mua sắm ngay</Link>
+                          <Link to="/tat-ca-san-pham" className="acc-btn acc-btn--primary">Mua sắm ngay</Link>
                         </div>
                     ) : (
                         <div className="acc-orders-list">
                           {orders.map((order) => {
-                            const cleanStatus = (order.status || '').replace(/[\u23F3\uD83D\uDE9A\u2714\uFE0F\u274C📦⏳🚚✔️❌]/g, '').trim();
-                            let currentStep = TIMELINE_STEPS.indexOf(cleanStatus);
+                            let currentStep = TIMELINE_STEPS.indexOf(order.status);
                             if (currentStep === -1) currentStep = 0;
-                            const cfg = STATUS_CONFIG[cleanStatus] || STATUS_CONFIG['Chờ xác nhận'];
+                            const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG['Chờ xác nhận'];
+
                             return (
                                 <div className="acc-order-card" key={order.id}>
                                   <div className="acc-order-card__head">
                                     <div className="acc-order-card__id-group">
-                                      <span className="acc-order-card__id">#MS{order.id.toString().substring(0,6).toUpperCase()}</span>
-                                      <span className="acc-order-card__date">{order.date ? new Date(order.date).toLocaleString('vi-VN') : ''}</span>
+                                      <span className="acc-order-card__id">
+                                        #MS{order.id ? order.id.toString().substring(0,6).toUpperCase() : 'N/A'}
+                                      </span>
+                                      <span className="acc-order-card__date">
+                                        {order.date ? new Date(order.date).toLocaleString('vi-VN') : ''}
+                                      </span>
                                     </div>
-                                    <span className="acc-order-card__status" style={{ color: cfg.color, background: cfg.bg }}>{cleanStatus}</span>
+                                    <span className="acc-order-card__status" style={{ color: cfg.color, background: cfg.bg }}>
+                                      {order.status}
+                                    </span>
                                   </div>
                                   <div className="acc-order-card__items">
-                                    {order.items.map((item, i) => (
+                                    {order.items && order.items.map((item, i) => (
                                         <div className="acc-order-card__item" key={i}>
                                           <span className="acc-order-card__item-name">{item.name}</span>
-                                          <span className="acc-order-card__item-meta">x{item.qty || item.quantity || 1} — {formatPrice(item.price)}</span>
+                                          <span className="acc-order-card__item-meta">x{item.qty || 1} — {formatPrice(item.price)}</span>
                                         </div>
                                     ))}
                                   </div>
-                                  <div className="acc-timeline">
-                                    {TIMELINE_STEPS.map((step, idx) => {
-                                      const done = idx <= currentStep;
-                                      const isActive = idx === currentStep;
-                                      const StepIcon = TIMELINE_ICONS[idx];
-                                      return (
-                                          <div className={`acc-timeline__step${done ? ' acc-timeline__step--done' : ''}${isActive ? ' acc-timeline__step--active' : ''}`} key={step}>
-                                            <div className="acc-timeline__dot"><StepIcon /></div>
-                                            {idx < TIMELINE_STEPS.length - 1 && <div className={`acc-timeline__line${done && idx < currentStep ? ' acc-timeline__line--done' : ''}`} />}
-                                            <span className="acc-timeline__label">{step}</span>
-                                          </div>
-                                      );
-                                    })}
+
+                                  {order.status !== 'Đã hủy' && (
+                                      <div className="acc-timeline">
+                                        {TIMELINE_STEPS.map((step, idx) => {
+                                          const done = idx <= currentStep;
+                                          const isActive = idx === currentStep;
+                                          const StepIcon = TIMELINE_ICONS[idx];
+                                          return (
+                                              <div className={`acc-timeline__step${done ? ' acc-timeline__step--done' : ''}${isActive ? ' acc-timeline__step--active' : ''}`} key={step}>
+                                                <div className="acc-timeline__dot"><StepIcon /></div>
+                                                {idx < TIMELINE_STEPS.length - 1 && <div className={`acc-timeline__line${done && idx < currentStep ? ' acc-timeline__line--done' : ''}`} />}
+                                                <span className="acc-timeline__label">{step}</span>
+                                              </div>
+                                          );
+                                        })}
+                                      </div>
+                                  )}
+
+                                  <div className="acc-order-card__footer">
+                                    <span>Tổng cộng</span>
+                                    <strong className="acc-order-card__total">{formatPrice(order.total)}</strong>
                                   </div>
-                                  <div className="acc-order-card__footer"><span>Tổng cộng</span><strong className="acc-order-card__total">{formatPrice(order.total)}</strong></div>
                                 </div>
                             );
                           })}
@@ -403,111 +402,12 @@ export default function Account() {
                   </section>
               )}
 
+              {/* Phần Sổ địa chỉ */}
               {activeTab === 'addresses' && (
                   <section className="acc-section">
                     <div className="acc-section__header">
                       <h2 className="acc-section__title">Sổ địa chỉ</h2>
-                      <div className="acc-addr-header-right">
-                        <span className="acc-section__count">{addresses.length} địa chỉ</span>
-                        <button type="button" className="acc-btn acc-btn--primary acc-btn--sm" onClick={openAddrAdd}><PlusIcon /> Thêm địa chỉ</button>
-                      </div>
                     </div>
-                    {addrMsg && <div className="acc-save-msg"><CheckIcon /> {addrMsg}</div>}
-
-                    {showAddrForm && (
-                        <div className="acc-addr-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeAddrForm(); }}>
-                          <div className="acc-addr-modal">
-                            <div className="acc-addr-modal__head">
-                              <h3>{editingAddr ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới'}</h3>
-                              <button type="button" className="acc-addr-modal__close" onClick={closeAddrForm}><CloseModalIcon /></button>
-                            </div>
-                            <div className="acc-addr-modal__body">
-                              <div className="acc-form__field">
-                                <label className="acc-form__label">Tên gợi nhớ</label>
-                                <input className="acc-form__input" placeholder='VD: Nhà riêng, Văn phòng…' value={addrForm.label} onChange={e => setAddrForm(p => ({ ...p, label: e.target.value }))} />
-                              </div>
-                              <div className="acc-addr-row">
-                                <div className="acc-form__field">
-                                  <label className="acc-form__label">Họ tên <span className="acc-req">*</span></label>
-                                  <input className={`acc-form__input${addrErrors.name ? ' acc-form__input--err' : ''}`} value={addrForm.name} onChange={e => setAddrForm(p => ({ ...p, name: e.target.value }))} />
-                                  {addrErrors.name && <span className="acc-addr-err">{addrErrors.name}</span>}
-                                </div>
-                                <div className="acc-form__field">
-                                  <label className="acc-form__label">Số điện thoại <span className="acc-req">*</span></label>
-                                  <input className={`acc-form__input${addrErrors.phone ? ' acc-form__input--err' : ''}`} value={addrForm.phone} onChange={e => setAddrForm(p => ({ ...p, phone: e.target.value }))} />
-                                  {addrErrors.phone && <span className="acc-addr-err">{addrErrors.phone}</span>}
-                                </div>
-                              </div>
-                              <div className="acc-addr-row">
-                                <div className="acc-form__field">
-                                  <label className="acc-form__label">Tỉnh/Thành phố <span className="acc-req">*</span></label>
-                                  <select className={`acc-form__input${addrErrors.city ? ' acc-form__input--err' : ''}`} value={addrForm.city} onChange={e => setAddrForm(p => ({ ...p, city: e.target.value }))}>
-                                    <option value="">Chọn tỉnh/thành phố</option>
-                                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-                                  </select>
-                                  {addrErrors.city && <span className="acc-addr-err">{addrErrors.city}</span>}
-                                </div>
-                                <div className="acc-form__field">
-                                  <label className="acc-form__label">Quận/Huyện</label>
-                                  <input className="acc-form__input" value={addrForm.district} onChange={e => setAddrForm(p => ({ ...p, district: e.target.value }))} />
-                                </div>
-                              </div>
-                              <div className="acc-form__field">
-                                <label className="acc-form__label">Phường/Xã</label>
-                                <input className="acc-form__input" value={addrForm.ward} onChange={e => setAddrForm(p => ({ ...p, ward: e.target.value }))} />
-                              </div>
-                              <div className="acc-form__field">
-                                <label className="acc-form__label">Địa chỉ cụ thể <span className="acc-req">*</span></label>
-                                <input className={`acc-form__input${addrErrors.street ? ' acc-form__input--err' : ''}`} placeholder="Số nhà, tên đường…" value={addrForm.street} onChange={e => setAddrForm(p => ({ ...p, street: e.target.value }))} />
-                                {addrErrors.street && <span className="acc-addr-err">{addrErrors.street}</span>}
-                              </div>
-                              <label className="acc-addr-default-check">
-                                <input type="checkbox" checked={addrForm.isDefault} onChange={e => setAddrForm(p => ({ ...p, isDefault: e.target.checked }))} />
-                                <span>Đặt làm địa chỉ mặc định</span>
-                              </label>
-                            </div>
-                            <div className="acc-addr-modal__foot">
-                              <button type="button" className="acc-btn acc-btn--ghost" onClick={closeAddrForm}>Hủy</button>
-                              <button type="button" className="acc-btn acc-btn--primary" onClick={handleSaveAddr}><SaveIcon /> {editingAddr ? 'Cập nhật' : 'Lưu địa chỉ'}</button>
-                            </div>
-                          </div>
-                        </div>
-                    )}
-
-                    {addresses.length === 0 ? (
-                        <div className="acc-empty">
-                          <MapPinIcon />
-                          <h3>Chưa có địa chỉ nào</h3>
-                          <button type="button" className="acc-btn acc-btn--primary" onClick={openAddrAdd}>Thêm địa chỉ mới</button>
-                        </div>
-                    ) : (
-                        <div className="acc-addr-list">
-                          {addresses.map(addr => (
-                              <div className={`acc-addr-card${addr.isDefault ? ' acc-addr-card--default' : ''}`} key={addr.id}>
-                                <div className="acc-addr-card__top">
-                                  <div className="acc-addr-card__label-row">
-                                    <span className="acc-addr-card__label">{addr.label || 'Địa chỉ'}</span>
-                                    {addr.isDefault && <span className="acc-addr-badge">Mặc định</span>}
-                                  </div>
-                                  <div className="acc-addr-card__actions">
-                                    <button type="button" className="acc-addr-action" onClick={() => openAddrEdit(addr)}><EditIcon /></button>
-                                    <button type="button" className="acc-addr-action acc-addr-action--del" onClick={() => handleDeleteAddr(addr.id)}><TrashIcon /></button>
-                                  </div>
-                                </div>
-                                <div className="acc-addr-card__body">
-                                  <div className="acc-addr-card__row"><strong>{addr.name}</strong></div>
-                                  <div className="acc-addr-card__row acc-addr-card__row--meta"><PhoneSmIcon /> {addr.phone}</div>
-                                  <div className="acc-addr-card__row acc-addr-card__row--meta"><HomeSmIcon /> {[addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}</div>
-                                </div>
-                                {!addr.isDefault && (
-                                    <button type="button" className="acc-addr-card__set-default" onClick={() => handleSetDefault(addr.id)}>
-                                      <StarIcon filled={false} /> Đặt làm mặc định
-                                    </button>
-                                )}
-                              </div>
-                          ))}
-                        </div>
-                    )}
                   </section>
               )}
 
