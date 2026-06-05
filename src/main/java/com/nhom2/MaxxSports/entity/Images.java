@@ -16,6 +16,10 @@ public class Images {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Lob
+    @Column(
+            columnDefinition = "LONGTEXT"
+    )
     private String url;
 
     private String publicId;

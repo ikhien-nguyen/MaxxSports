@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './AdminProducts.css';
-
+import { productService }
+  from "../../services/productService";
+import { optionService } from "../../services/optionService";
+import { productDetailService } from "../../services/productDetailService";
 const EditIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -24,101 +27,339 @@ const PlusIcon = () => (
   </svg>
 );
 
-const defaultProducts = [
-  {
-    id: 'p1',
-    name: 'Giày Chạy Bộ Nam',
-    category: 'giay-nam',
-    price: '1500000',
-    stock: 24,
-    image: 'https://via.placeholder.com/150'
-  },
-  {
-    id: 'p2',
-    name: 'Áo Thể Thao Cao Cấp',
-    category: 'ao-the-thao',
-    price: '500000',
-    stock: 15,
-    image: 'https://via.placeholder.com/150'
-  }
-];
-
 const AdminProducts = () => {
-  const [products, setProducts] = useState([]);
+  const [product,setProduct] = useState({
+    name:"",
+    brand:"",
+    material:"",
+    category:"",
+    price:"",
+    description:"",
+    productDetails:[]
+  });
+  const [isDetailModalOpen,setIsDetailModalOpen] = useState(false);
+  const [detail,setDetail] = useState({
+    size:"",
+    color:"",
+    quantity:"",
+    image:""
+  });
   const [categories, setCategories] = useState([]);
+  const [products,setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    price: '',
-    stock: '',
-    image: '',
-    colors: '',
-    sizes: ''
-  });
   const [toast, setToast] = useState('');
+  const [sizes, setSizes] = useState([]);
+  const [colors, setColors] = useState([]);
+  const loadOptions = async () => {
 
+    try {
+
+      const colorData =
+          await optionService.getColors();
+
+      const sizeData =
+          await optionService.getSizes();
+
+      setColors(colorData);
+
+      setSizes(sizeData);
+
+    } catch(err){
+
+      console.log(err);
+
+    }
+  };
+  const handleSave = async (e) => {
+
+    e.preventDefault();
+
+    try {
+
+      const productRequest = {
+
+        tenSanPham: product.name || "",
+
+        thuongHieu: product.brand || "",
+
+        chatLieu: product.material || "",
+
+        loaiSanPham: product.category || "",
+
+        gia: Number(product.price || 0),
+
+        moTa: product.description || "",
+
+        thumbnail:
+            product.productDetails[0]?.image || ""
+
+      };
+
+      let productResponse;
+
+      if(editingProduct){
+
+        productResponse =
+            await productService.updateProduct(
+                editingProduct.maSanPham,
+                productRequest
+            );
+
+      } else {
+        console.log(
+            "REQUEST GUI:",
+            productRequest
+        );
+        productResponse =
+            await productService.createProduct(
+                productRequest
+            );
+
+      }
+
+      console.log(
+          "PRODUCT RESPONSE:",
+          productResponse
+      );
+
+      const productId =
+          editingProduct
+              ? editingProduct.maSanPham
+              : productResponse.maSanPham;
+      console.log("PRODUCT RESPONSE:", productResponse);
+      console.log("PRODUCT ID:", productId);
+      if(!productId){
+
+        alert("Không lấy được productId");
+
+        return;
+      }
+
+      for (const item of product.productDetails) {
+
+        const detailRequest = {
+
+          productId: productId,
+
+          sizeId: item.sizeId,
+
+          mauId: item.colorId,
+
+          soLuong: Number(item.quantity),
+
+          image: item.image
+        };
+
+        console.log(detailRequest);
+
+        if(item.maCtsp){
+
+          if(!item.sizeId || !item.colorId){
+
+            console.log("Detail cũ chưa có ID size/màu");
+
+            continue;
+          }
+
+          await productDetailService.updateDetail(
+              item.maCtsp,
+              detailRequest
+          );
+
+        }else{
+
+          await productDetailService.createDetail(
+              detailRequest
+          );
+
+        }
+      }
+
+      await loadData();
+
+      handleCloseModal();
+
+      showToast(
+          editingProduct
+              ? "Cập nhật thành công"
+              : "Thêm sản phẩm thành công"
+      );
+
+    } catch(err){
+
+      console.log(err);
+
+      console.log(
+          err.response?.data
+      );
+
+      alert(
+          JSON.stringify(
+              err.response?.data
+          )
+      );
+    }
+  };
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
+  const addProductDetail = () => {
 
-  const loadData = () => {
-    // Load products
-    const storedProducts = localStorage.getItem('xsport_products');
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      setProducts(defaultProducts);
-      localStorage.setItem('xsport_products', JSON.stringify(defaultProducts));
+    if (
+        !detail.size ||
+        !detail.color ||
+        !detail.quantity ||
+        !detail.image
+    ) {
+      alert("Nhập đầy đủ thông tin");
+      return;
     }
 
-    // Load categories for dropdown
-    const storedCats = localStorage.getItem('xsport_categories');
-    if (storedCats) {
-      setCategories(JSON.parse(storedCats));
-    } else {
-      setCategories([
-        { id: '1', name: 'Giày Nam', slug: 'giay-nam' },
-        { id: '2', name: 'Áo Thể Thao', slug: 'ao-the-thao' }
-      ]);
+    setProduct(prev => ({
+
+      ...prev,
+
+      productDetails:[
+
+        ...prev.productDetails,
+
+        {
+
+          size: sizes.find(
+              x => x.maSize == detail.size
+          )?.size,
+
+          sizeId: detail.size,
+
+          color: colors.find(
+              x => x.maMau == detail.color
+          )?.mau,
+
+          colorId: detail.color,
+
+          quantity:Number(detail.quantity),
+
+          image:detail.image
+
+        }
+
+      ]
+
+    }));
+    console.log(product.productDetails);
+    setDetail({
+      size: "",
+      color: "",
+      quantity: "",
+      image: ""
+    });
+
+    setIsDetailModalOpen(false);
+  };
+  const removeDetail = (index)=>{
+
+    setProduct({
+
+      ...product,
+
+      productDetails:
+
+          product.productDetails.filter(
+              (_,i)=>i!==index
+          )
+
+    });
+
+  };
+  const loadData = async () => {
+
+    try{
+
+      const data =
+          await productService
+              .getAllProducts();
+      console.log(data);
+      setProducts(data);
+
+    }catch(err){
+
+      console.log(err);
     }
   };
 
   useEffect(() => {
+
     loadData();
-    window.addEventListener('xsportDataUpdated', loadData);
-    return () => window.removeEventListener('xsportDataUpdated', loadData);
+    loadOptions();
   }, []);
 
   const formatCurrency = (amount) => {
-    return parseFloat(amount).toLocaleString('vi-VN') + 'đ';
+
+    return Number(
+        amount || 0
+    ).toLocaleString(
+        "vi-VN"
+    ) + "đ";
   };
 
   const handleOpenModal = (product = null) => {
+    setDetail({
+      size:"",
+      color:"",
+      quantity:"",
+      image:""
+    });
     if (product) {
       setEditingProduct(product);
-      setFormData({
-        name: product.name,
-        category: product.category,
-        price: product.price,
-        stock: product.stock,
-        image: product.image || '',
-        colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
-        sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || '')
+      setProduct({
+
+        name:product.tenSanPham,
+
+        brand:product.thuongHieu,
+
+        material:product.chatLieu,
+
+        category:product.loaiSanPham,
+
+        price:product.gia,
+
+        description:product.moTa,
+
+        productDetails:
+            product.productDetails?.map(item => ({
+
+              maCtsp: item.maCtsp,
+
+              size: item.size,
+
+              color: item.mau,
+
+              quantity: item.soLuong,
+
+              image: item.image,
+
+              sizeId: null,
+
+              colorId: null
+
+            })) || []
+
       });
+
     } else {
       setEditingProduct(null);
-      setFormData({
-        name: '',
-        category: categories.length > 0 ? categories[0].slug : '',
-        price: '',
-        stock: '',
-        image: '',
-        colors: '',
-        sizes: ''
+      setProduct({
+
+        name:"",
+        brand:"",
+        material:"",
+        category:"",
+        price:"",
+        description:"",
+        productDetails:[]
+
       });
     }
     setIsModalOpen(true);
@@ -129,57 +370,35 @@ const AdminProducts = () => {
     setEditingProduct(null);
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.price) {
-      alert('Vui lòng nhập tên và giá sản phẩm.');
-      return;
+const handleDelete = async (id) => {
+
+  if(
+      window.confirm(
+          "Bạn có chắc?"
+      )
+  ){
+    try{
+
+      await productService
+          .deleteProduct(id);
+
+      await loadData();
+
+
+      showToast(
+          "Xóa thành công"
+      );
+
+    }catch(err){
+
+      console.log(err);
+
+      alert(
+          "Xóa thất bại"
+      );
     }
-
-    // IMPERATIVE DATA PROCESSING
-    const processedProduct = {
-      ...formData,
-      // Convert comma-separated string to an array, trim whitespace, and filter out empty strings
-      colors: formData.colors ? formData.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Mặc định'],
-      sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean) : ['Freesize'],
-      // Ensure price and stock are parsed as Numbers
-      price: Number(formData.price),
-      stock: Number(formData.stock)
-    };
-
-    let updatedProducts;
-
-    if (editingProduct) {
-      updatedProducts = products.map(p => {
-        if (p.id === editingProduct.id) {
-          return { ...p, ...processedProduct };
-        }
-        return p;
-      });
-    } else {
-      const newProduct = {
-        id: 'prod_' + Date.now(),
-        ...processedProduct
-      };
-      updatedProducts = [...products, newProduct];
-    }
-
-    setProducts(updatedProducts);
-    localStorage.setItem('xsport_products', JSON.stringify(updatedProducts));
-    window.dispatchEvent(new Event('xsportDataUpdated'));
-    showToast(editingProduct ? '✅ Cập nhật sản phẩm thành công!' : '✅ Thêm sản phẩm mới thành công!');
-    handleCloseModal();
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-      const updatedProducts = products.filter(p => p.id !== id);
-      setProducts(updatedProducts);
-      localStorage.setItem('xsport_products', JSON.stringify(updatedProducts));
-      window.dispatchEvent(new Event('xsportDataUpdated'));
-      showToast('✅ Đã xóa sản phẩm thành công!');
-    }
-  };
+  }
+};
 
   const getCategoryName = (slug) => {
     const cat = categories.find(c => c.slug === slug);
@@ -203,7 +422,7 @@ const AdminProducts = () => {
             <tr>
               <th>Hình ảnh</th>
               <th>Tên Sản phẩm</th>
-              <th>Danh mục</th>
+              <th>Loại sản phẩm</th>
               <th>Giá</th>
               <th>Tồn kho</th>
               <th>Hành động</th>
@@ -212,27 +431,42 @@ const AdminProducts = () => {
           <tbody>
             {products.length > 0 ? (
               products.map((product) => (
-                <tr key={product.id}>
+                  <tr key={product.maSanPham}>
                   <td>
-                    <img 
-                      src={product.image || 'https://via.placeholder.com/50'} 
-                      alt={product.name} 
+                    <img
+                        src={product.thumbnail || 'https://via.placeholder.com/50'}
+                        alt={product.tenSanPham}
                       className="product-image-thumb" 
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }}
                     />
                   </td>
-                  <td><span className="product-name">{product.name}</span></td>
+                  <td><span className="product-name">{product.tenSanPham}</span></td>
                   <td>
-                    <span className="product-category-badge">{getCategoryName(product.category)}</span>
+                    <span className="product-category-badge">{getCategoryName(product.loaiSanPham)}</span>
                   </td>
-                  <td className="product-price">{formatCurrency(product.price)}</td>
-                  <td>{product.stock}</td>
+                  <td className="product-price">{formatCurrency(product.gia)}</td>
+                    <td>
+
+                      {
+                          product.productDetails?.reduce(
+
+                              (total, detail)=>
+
+                                  total +
+                                  (detail.soLuong || 0),
+
+                              0
+
+                          ) || 0
+                      }
+
+                    </td>
                   <td>
                     <div className="action-btns">
                       <button className="action-btn edit-btn" onClick={() => handleOpenModal(product)} title="Sửa">
                         <EditIcon />
                       </button>
-                      <button className="action-btn delete-btn" onClick={() => handleDelete(product.id)} title="Xóa">
+                      <button className="action-btn delete-btn" onClick={() => handleDelete(product.maSanPham)} title="Xóa">
                         <TrashIcon />
                       </button>
                     </div>
@@ -264,83 +498,416 @@ const AdminProducts = () => {
                 <input 
                   type="text" 
                   required
-                  value={formData.name} 
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  value={product.name}
+
+                  onChange={(e)=>
+
+                      setProduct({
+
+                        ...product,
+
+                        name:e.target.value
+
+                      })
+
+                  }
                   placeholder="VD: Giày chạy bộ XSPORT"
                 />
               </div>
 
               <div className="form-group">
-                <label>Danh mục</label>
-                <select 
-                  value={formData.category} 
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  required
-                >
-                  <option value="" disabled>-- Chọn danh mục --</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.slug}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
 
+                <label>Thương hiệu</label>
+
+                <select
+                    required
+                    value={product.brand}
+                    onChange={(e)=>
+                        setProduct({
+                          ...product,
+                          brand: e.target.value
+                        })
+                    }
+                >
+
+                  <option value="">Chọn thương hiệu</option>
+
+                  <option value="ADIDAS">ADIDAS</option>
+
+                  <option value="NIKE">NIKE</option>
+
+                  <option value="361">361</option>
+
+                  <option value="ATINO">ATINO</option>
+
+                  <option value="XSPORT">XSPORT</option>
+
+                </select>
+
+              </div>
+              <div className="form-group">
+
+                <label>Chất liệu</label>
+
+                <input
+
+                    value={product.material}
+
+                    onChange={(e)=>
+
+                        setProduct({
+
+                          ...product,
+
+                          material:e.target.value
+
+                        })
+
+                    }
+
+                />
+
+              </div>
+              <div className="form-group">
+
+                <label>Loại sản phẩm</label>
+
+                <select
+                    required
+                    value={product.category}
+                    onChange={(e)=>
+                        setProduct({
+                          ...product,
+                          category: e.target.value
+                        })
+                    }
+                >
+
+                  <option value="">Chọn loại sản phẩm</option>
+
+                  <option value="Quần áo chạy bộ">
+                    Quần áo chạy bộ
+                  </option>
+
+                  <option value="Đồng hồ">
+                    Đồng hồ
+                  </option>
+
+                  <option value="Giày/Dép">
+                    Giày/Dép
+                  </option>
+
+                  <option value="Tất">
+                    Tất
+                  </option>
+
+                </select>
+
+              </div>
               <div className="form-group">
                 <label>Giá (VNĐ)</label>
                 <input 
                   type="number" 
                   required
-                  value={formData.price} 
-                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  value={product.price}
+
+                  onChange={(e)=>
+
+                      setProduct({
+
+                        ...product,
+
+                        price:e.target.value
+
+                      })
+
+                  }
                   placeholder="VD: 1500000"
                 />
               </div>
+              <div className="form-group full-width">
 
-              <div className="form-group">
-                <label>Số lượng Tồn kho</label>
-                <input 
-                  type="number" 
-                  required
-                  value={formData.stock} 
-                  onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                  placeholder="VD: 50"
+                <label>Mô tả</label>
+
+                <textarea
+
+                    value={product.description}
+
+                    onChange={(e)=>
+
+                        setProduct({
+
+                          ...product,
+
+                          description:e.target.value
+
+                        })
+
+                    }
+
                 />
+
+              </div>
+              <div className="detail-header">
+
+                <h3>Chi tiết sản phẩm</h3>
+
+                <button
+                    type="button"
+                    className="add-detail-btn"
+                    onClick={()=>setIsDetailModalOpen(true)}
+                >
+
+                  + Thêm chi tiết sản phẩm
+
+                </button>
+
               </div>
 
-              <div className="form-group">
-                <label>Màu sắc (Cách nhau bằng dấu phẩy)</label>
-                <input 
-                  type="text" 
-                  value={formData.colors} 
-                  onChange={(e) => setFormData({...formData, colors: e.target.value})}
-                  placeholder="VD: Đen, Trắng, Đỏ"
-                />
-              </div>
+              <table className="detail-table">
 
-              <div className="form-group">
-                <label>Kích cỡ (Cách nhau bằng dấu phẩy)</label>
-                <input 
-                  type="text" 
-                  value={formData.sizes} 
-                  onChange={(e) => setFormData({...formData, sizes: e.target.value})}
-                  placeholder="VD: S, M, L, XL"
-                />
-              </div>
+                <thead>
 
-              <div className="form-group">
-                <label>URL Hình ảnh</label>
-                <input 
-                  type="text" 
-                  value={formData.image} 
-                  onChange={(e) => setFormData({...formData, image: e.target.value})}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
+                <tr>
+
+                  <th>Ảnh</th>
+
+                  <th>Size</th>
+
+                  <th>Màu</th>
+
+                  <th>SL</th>
+
+                  <th>Thao tác</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+                {
+                  product.productDetails.length > 0 ? (
+
+                      product.productDetails.map((item,index)=>(
+
+                          <tr key={index}>
+                            <td>
+                              <img src={item.image} width="60" alt="" />
+                            </td>
+                            <td>{item.size}</td>
+                            <td>{item.color}</td>
+                            <td>{item.quantity}</td>
+                            <td>
+                              <button
+                                  type="button"
+                                  onClick={() => removeDetail(index)}
+                              >
+                                Xóa
+                              </button>
+                            </td>
+                          </tr>
+
+                      ))
+
+                  ) : (
+
+                      <tr>
+                        <td colSpan="5">
+                          Chưa có chi tiết sản phẩm
+                        </td>
+                      </tr>
+
+                  )
+                }
+                </tbody>
+
+              </table>
+
 
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={handleCloseModal}>Hủy</button>
                 <button type="submit" className="save-btn">Lưu Sản phẩm</button>
               </div>
             </form>
+            {
+
+                isDetailModalOpen && (
+
+                    <div className="detail-modal-overlay">
+
+                      <div className="detail-modal">
+
+                        <h3>Thêm chi tiết sản phẩm</h3>
+
+                        <select
+                            value={detail.size}
+                            onChange={(e)=>
+
+                                setDetail({
+
+                                  ...detail,
+
+                                  size:Number(
+                                      e.target.value
+                                  )
+
+                                })
+
+                            }
+                        >
+
+                          <option value="">
+
+                            Size
+
+                          </option>
+
+                          {
+
+                            sizes.map(item=>(
+
+                                <option
+                                    key={item.maSize}
+                                    value={item.maSize}
+                                >
+                                  {item.size}
+                                </option>
+
+                            ))
+
+                          }
+
+                        </select>
+
+
+                        <select
+                            value={detail.color}
+                            onChange={(e)=>
+
+                                setDetail({
+
+                                  ...detail,
+
+                                  color:Number(
+                                      e.target.value
+                                  )
+
+                                })
+
+                            }
+                        >
+
+                          <option value="">
+
+                            Màu
+
+                          </option>
+
+                          {
+
+                            colors.map(item=>(
+
+                                <option
+                                    key={item.maMau}
+                                    value={item.maMau}
+                                >
+                                  {item.mau}
+                                </option>
+
+                            ))
+
+                          }
+                        </select>
+
+
+                        <input
+                            type="number"
+                            placeholder="Số lượng"
+                            value={detail.quantity}
+                            onChange={(e)=>
+
+                                setDetail({
+
+                                  ...detail,
+                                  quantity:e.target.value
+
+                                })
+
+                            }
+                        />
+
+
+                        <input
+                            type="file"
+
+                            onChange={(e)=>{
+
+                              const file=e.target.files[0];
+
+                              if(file){
+
+                                const reader =
+                                    new FileReader();
+
+                                reader.onload=()=>{
+
+                                  setDetail({
+
+                                    ...detail,
+                                    image:reader.result
+
+                                  })
+
+                                };
+
+                                reader.readAsDataURL(file);
+
+                              }
+
+                            }}
+
+                        />
+
+                        {
+
+                            detail.image &&
+
+                            <img
+                                src={detail.image}
+                                className="preview-img"
+                            />
+
+                        }
+
+                        <div className="detail-actions">
+
+                          <button
+                              type="button"
+                              onClick={()=>setIsDetailModalOpen(false)}
+                          >
+
+                            Hủy
+
+                          </button>
+
+                          <button
+                              type="button"
+                              onClick={addProductDetail}
+                          >
+
+                            Thêm
+
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                )
+
+            }
           </div>
         </div>
       )}

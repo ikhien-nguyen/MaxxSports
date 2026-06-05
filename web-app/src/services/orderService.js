@@ -53,5 +53,12 @@ export const orderService = {
     updateOrderStatusByAdmin: async (updateOrderRequest) => {
         const response = await api.put('/order/status', updateOrderRequest);
         return response.data;
+    },
+    deleteOrder: async (id) => {
+
+        const response =
+            await api.delete(`/order/${id}`);
+
+        return response.data;
     }
 };
