@@ -93,29 +93,30 @@ const menuItems = [
 const AdminLayout = () => {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const currentUser = JSON.parse(localStorage.getItem('xsport_user') || '{}');
+  const [globalSearch, setGlobalSearch] = useState('');
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'Dashboard':
-        return <AdminDashboard />;
-      case 'Orders':
-        return <AdminOrders />;
-      case 'Products':
-        return <AdminProducts />;
-      case 'Categories':
-        return <AdminCategories />;
-        case 'ProductTypes':
-            return <AdminProductTypes />;
-      case 'Customers':
-        return <AdminCustomers />;
-      default:
-        return (
-          <div className="admin-dashboard-placeholder">
-            <h2>{menuItems.find(m => m.id === activeTab)?.label}</h2>
-            <p>Module đang được phát triển</p>
-          </div>
-        );
-    }
+      switch (activeTab) {
+          case 'Dashboard':
+              return <AdminDashboard />;
+          case 'Orders':
+              return <AdminOrders searchTerm={globalSearch} />;
+          case 'Products':
+              return <AdminProducts searchTerm={globalSearch} />;
+          case 'Categories':
+              return <AdminCategories searchTerm={globalSearch} />;
+          case 'ProductTypes':
+              return <AdminProductTypes searchTerm={globalSearch} />;
+          case 'Customers':
+              return <AdminCustomers searchTerm={globalSearch} />;
+          default:
+              return (
+                  <div className="admin-dashboard-placeholder">
+                      <h2>{menuItems.find(m => m.id === activeTab)?.label}</h2>
+                      <p>Module đang được phát triển</p>
+                  </div>
+              );
+      }
   };
 
   return (
@@ -140,7 +141,9 @@ const AdminLayout = () => {
             <div 
               key={item.id}
               className={`admin-nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                  setGlobalSearch('');
+                  setActiveTab(item.id)}}
             >
               {item.icon}
               {item.label}
@@ -173,11 +176,13 @@ const AdminLayout = () => {
           <div className="admin-header-actions">
             <div className="admin-search-wrapper">
               <SearchIcon />
-              <input 
-                type="text" 
-                className="admin-search-bar" 
-                placeholder={`Tìm kiếm...`} 
-              />
+                <input
+                    type="text"
+                    className="admin-search-bar"
+                    placeholder={`Tìm kiếm trong ${menuItems.find(m => m.id === activeTab)?.label}...`}
+                    value={globalSearch}
+                    onChange={(e) => setGlobalSearch(e.target.value)}
+                />
             </div>
 
             <button className="admin-bell-btn">

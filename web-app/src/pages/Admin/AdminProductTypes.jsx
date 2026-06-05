@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './AdminCategories.css';
 import { productTypeService } from '../../services/productTypeService';
 
@@ -26,12 +26,22 @@ const PlusIcon = () => (
     </svg>
 );
 
-const AdminProductTypes = () => {
+const AdminProductTypes = ({ searchTerm = "" }) => {
     const [productTypes, setProductTypes] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingType, setEditingType] = useState(null);
     const [formData, setFormData] = useState({ name: '' });
     const [isLoading, setIsLoading] = useState(false);
+
+    const filteredProductTypes = useMemo(() => {
+        if (!searchTerm) return productTypes;
+        const lowerSearch = searchTerm.toLowerCase();
+
+        return productTypes.filter(type =>
+            type.name?.toLowerCase().includes(lowerSearch) ||
+            String(type.id).toLowerCase().includes(lowerSearch)
+        );
+    }, [productTypes, searchTerm]);
 
     /* ── GỌI API LẤY DANH SÁCH ── */
     const loadData = async () => {
@@ -120,8 +130,8 @@ const AdminProductTypes = () => {
                         <tr>
                             <td colSpan="3" className="empty-state">Đang tải dữ liệu...</td>
                         </tr>
-                    ) : productTypes.length > 0 ? (
-                        productTypes.map((type) => (
+                    ) : filteredProductTypes.length > 0 ? (
+                        [...filteredProductTypes].reverse().map((type) => (
                             <tr key={type.id}>
                                 <td>{type.id}</td>
                                 <td><span className="category-name">{type.name}</span></td>
@@ -139,7 +149,7 @@ const AdminProductTypes = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="3" className="empty-state">Chưa có loại sản phẩm nào.</td>
+                            <td colSpan="3" className="empty-state">Chưa có loại sản phẩm nào hoặc không tìm thấy kết quả.</td>
                         </tr>
                     )}
                     </tbody>

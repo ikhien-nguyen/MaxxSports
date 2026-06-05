@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { userService } from '../../services/userService';
 import './AdminCustomers.css';
 
-const AdminCustomers = () => {
+const AdminCustomers = ({ searchTerm = "" }) => {
   const [customers, setCustomers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -14,6 +14,17 @@ const AdminCustomers = () => {
       return {};
     }
   });
+
+  const filteredCustomers = useMemo(() => {
+    if (!searchTerm) return customers;
+    const lowerSearch = searchTerm.toLowerCase();
+
+    return customers.filter((customer) =>
+        (customer.name?.toLowerCase().includes(lowerSearch)) ||
+        (customer.email?.toLowerCase().includes(lowerSearch)) ||
+        (customer.phone?.includes(searchTerm))
+    );
+  }, [customers, searchTerm]);
 
   const loadCustomers = async () => {
     setIsLoading(true);
@@ -58,7 +69,7 @@ const AdminCustomers = () => {
 
   return (
       <div className="admin-customers-container">
-        <div className="customers-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="customers-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2>Quản lý khách hàng</h2>
           <button className="export-btn" onClick={() => alert('Chức năng xuất CSV sẽ được tích hợp sau.')}>
             Xuất dữ liệu (CSV)
@@ -86,8 +97,8 @@ const AdminCustomers = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {customers.length > 0 ? (
-                    customers.map((customer) => {
+                {filteredCustomers.length > 0 ? (
+                    [...filteredCustomers].reverse().map((customer) => {
                       const isMe = customer.email === currentUser.email;
 
                       return (
@@ -105,16 +116,16 @@ const AdminCustomers = () => {
                             </td>
                             <td>{customer.phone || '—'}</td>
                             <td>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          backgroundColor: customer.role === 'ADMIN' ? '#fee2e2' : '#e0f2fe',
-                          color: customer.role === 'ADMIN' ? '#991b1b' : '#0369a1'
-                        }}>
-                          {customer.role}
-                        </span>
+                              <span style={{
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                backgroundColor: customer.role === 'ADMIN' ? '#fee2e2' : '#e0f2fe',
+                                color: customer.role === 'ADMIN' ? '#991b1b' : '#0369a1'
+                              }}>
+                                {customer.role}
+                              </span>
                             </td>
                             <td style={{ textAlign: 'center' }}>
                               {isMe ? (
@@ -141,7 +152,7 @@ const AdminCustomers = () => {
                 ) : (
                     <tr>
                       <td colSpan="5" className="empty-customers" style={{ textAlign: 'center', padding: '20px' }}>
-                        Hệ thống chưa ghi nhận tài khoản thành viên nào.
+                        Hệ thống chưa ghi nhận tài khoản thành viên nào hoặc không tìm thấy kết quả.
                       </td>
                     </tr>
                 )}

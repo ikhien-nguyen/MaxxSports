@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './AdminCategories.css';
 import { categoryService } from '../../services/categoryService';
 
@@ -26,12 +26,22 @@ const PlusIcon = () => (
     </svg>
 );
 
-const AdminCategories = () => {
+// Nhận prop searchTerm từ AdminLayout
+const AdminCategories = ({ searchTerm = "" }) => {
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
   const [formData, setFormData] = useState({ name: '', slug: '' });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Áp dụng useMemo để lọc dữ liệu dựa trên searchTerm
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm) return categories;
+    return categories.filter((cat) =>
+        cat.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cat.slug?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [categories, searchTerm]);
 
   /* ── 1. GỌI API LẤY DANH SÁCH DANH MỤC ── */
   const loadData = async () => {
@@ -67,17 +77,15 @@ const AdminCategories = () => {
 
     try {
       if (editingCat) {
-        // Cập nhật danh mục
         await categoryService.updateCategory(editingCat.id, formData);
       } else {
-        // Thêm danh mục mới
         await categoryService.createCategory({
           name: formData.name,
           slug: formData.slug || formData.name.toLowerCase().replace(/ /g, '-')
         });
       }
 
-      await loadData(); // Load lại data từ DB sau khi lưu
+      await loadData();
       setIsModalOpen(false);
     } catch (error) {
       console.error("Lỗi khi lưu danh mục:", error);
@@ -89,10 +97,8 @@ const AdminCategories = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
       try {
-        // Dùng luôn hàm từ service cho đồng bộ và gọn code
         await categoryService.deleteCategory(id);
-
-        await loadData(); // Tải lại danh sách sau khi xóa thành công
+        await loadData();
         alert("Xóa danh mục thành công!");
       } catch (error) {
         console.error("Lỗi khi xóa danh mục:", error);
@@ -126,8 +132,9 @@ const AdminCategories = () => {
                 <tr>
                   <td colSpan="4" className="empty-state">Đang tải dữ liệu...</td>
                 </tr>
-            ) : categories.length > 0 ? (
-                categories.map((cat) => (
+            ) : filteredCategories.length > 0 ? (
+                // Đảo ngược mảng để các danh mục mới nhất hiển thị lên đầu
+                [...filteredCategories].reverse().map((cat) => (
                     <tr key={cat.id}>
                       <td>{String(cat.id).substring(0, 6)}</td>
                       <td><span className="category-name">{cat.name}</span></td>
@@ -146,7 +153,7 @@ const AdminCategories = () => {
                 ))
             ) : (
                 <tr>
-                  <td colSpan="4" className="empty-state">Chưa có danh mục nào.</td>
+                  <td colSpan="4" className="empty-state">Chưa có danh mục nào hoặc không tìm thấy kết quả.</td>
                 </tr>
             )}
             </tbody>
