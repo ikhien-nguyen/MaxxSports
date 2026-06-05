@@ -5,6 +5,7 @@ import AdminOrders from './AdminOrders';
 import AdminProducts from './AdminProducts';
 import AdminCategories from './AdminCategories';
 import AdminCustomers from './AdminCustomers';
+import AdminProductTypes from './AdminProductTypes';
 
 import { authService } from '../../services/authService';
 
@@ -63,6 +64,14 @@ const SearchIcon = () => (
   </svg>
 );
 
+const LayersIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 12 12 17 22 12"></polyline>
+        <polyline points="2 17 12 22 22 17"></polyline>
+    </svg>
+);
+
 const ExitIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -76,6 +85,7 @@ const menuItems = [
   { id: 'Orders', label: 'Quản lý Đơn hàng', icon: <BoxIcon /> },
   { id: 'Products', label: 'Quản lý Sản phẩm', icon: <TagIcon /> },
   { id: 'Categories', label: 'Bảo trì Danh mục', icon: <GridIcon /> },
+    { id: 'ProductTypes', label: 'Loại Sản Phẩm', icon: <LayersIcon /> },
   { id: 'Customers', label: 'Quản lý Khách hàng', icon: <UsersIcon /> },
   { id: 'Settings', label: 'Cài đặt', icon: <SettingsIcon /> },
 ];
@@ -94,6 +104,8 @@ const AdminLayout = () => {
         return <AdminProducts />;
       case 'Categories':
         return <AdminCategories />;
+        case 'ProductTypes':
+            return <AdminProductTypes />;
       case 'Customers':
         return <AdminCustomers />;
       default:

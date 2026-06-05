@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './AdminProducts.css';
 import { productService }
   from "../../services/productService";
 import { optionService } from "../../services/optionService";
 import { productDetailService } from "../../services/productDetailService";
+import { productTypeService } from "../../services/productTypeService";
 const EditIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -51,6 +52,14 @@ const AdminProducts = () => {
   const [toast, setToast] = useState('');
   const [sizes, setSizes] = useState([]);
   const [colors, setColors] = useState([]);
+  const [productTypes, setProductTypes] = useState([]);
+
+  const dynamicBrands = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    const allBrands = products.map(p => p.thuongHieu).filter(Boolean);
+    return [...new Set(allBrands)].sort();
+  }, [products]);
+
   const loadOptions = async () => {
 
     try {
@@ -61,9 +70,13 @@ const AdminProducts = () => {
       const sizeData =
           await optionService.getSizes();
 
+      const typeData = await productTypeService.getAllProductTypes();
+
       setColors(colorData);
 
       setSizes(sizeData);
+
+      setProductTypes(typeData);
 
     } catch(err){
 
@@ -280,6 +293,7 @@ const AdminProducts = () => {
       const data =
           await productService
               .getAllProducts();
+      console.log("Data từ API:", data);
       console.log(data);
       setProducts(data);
 
@@ -516,34 +530,19 @@ const handleDelete = async (id) => {
               </div>
 
               <div className="form-group">
-
                 <label>Thương hiệu</label>
-
-                <select
+                <input
+                    list="brand-options"
                     required
                     value={product.brand}
-                    onChange={(e)=>
-                        setProduct({
-                          ...product,
-                          brand: e.target.value
-                        })
-                    }
-                >
-
-                  <option value="">Chọn thương hiệu</option>
-
-                  <option value="ADIDAS">ADIDAS</option>
-
-                  <option value="NIKE">NIKE</option>
-
-                  <option value="361">361</option>
-
-                  <option value="ATINO">ATINO</option>
-
-                  <option value="XSPORTS">XSPORTS</option>
-
-                </select>
-
+                    onChange={(e)=> setProduct({...product, brand: e.target.value})}
+                    placeholder="Chọn hoặc nhập thương hiệu mới"
+                />
+                <datalist id="brand-options">
+                  {dynamicBrands.map((brand, idx) => (
+                      <option key={idx} value={brand} />
+                  ))}
+                </datalist>
               </div>
               <div className="form-group">
 
@@ -569,9 +568,7 @@ const handleDelete = async (id) => {
 
               </div>
               <div className="form-group">
-
                 <label>Loại sản phẩm</label>
-
                 <select
                     required
                     value={product.category}
@@ -582,27 +579,13 @@ const handleDelete = async (id) => {
                         })
                     }
                 >
-
                   <option value="">Chọn loại sản phẩm</option>
-
-                  <option value="Quần áo chạy bộ">
-                    Quần áo chạy bộ
-                  </option>
-
-                  <option value="Đồng hồ">
-                    Đồng hồ
-                  </option>
-
-                  <option value="Giày/Dép">
-                    Giày/Dép
-                  </option>
-
-                  <option value="Tất">
-                    Tất
-                  </option>
-
+                  {productTypes.map((type) => (
+                      <option key={type.id} value={type.name}>
+                        {type.name}
+                      </option>
+                  ))}
                 </select>
-
               </div>
               <div className="form-group">
                 <label>Giá (VNĐ)</label>
