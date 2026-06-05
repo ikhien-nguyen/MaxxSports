@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminOrders.css';
-
+import { orderService } from "../../services/orderService";
 // --- Icons ---
 const EyeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,14 +43,8 @@ const CalendarIcon = () => (
 );
 
 const AdminOrders = () => {
-  const [orders, setOrders] = useState(() => {
-    try {
-      const stored = localStorage.getItem('xsport_orders');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState('');
@@ -60,54 +54,74 @@ const AdminOrders = () => {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const loadOrders = () => {
-    const storedOrders = localStorage.getItem('xsport_orders');
-    if (storedOrders) {
-      setOrders(JSON.parse(storedOrders));
-    } else {
-      setOrders([]);
+  const loadOrders = async () => {
+
+    try{
+
+      const data =
+          await orderService.getAllOrdersForAdmin();
+
+        setOrders(data.result || []);
+    }catch(err){
+
+      console.log(err);
     }
-  };
+  }
 
   useEffect(() => {
+
     loadOrders();
-    window.addEventListener('xsportDataUpdated', loadOrders);
-    window.addEventListener('storage', loadOrders);
-    return () => {
-      window.removeEventListener('xsportDataUpdated', loadOrders);
-      window.removeEventListener('storage', loadOrders);
-    };
+
   }, []);
 
-  const handleStatusChange = (orderId, newStatus) => {
-    // 1. Fetch current orders
-    let ordersData = JSON.parse(localStorage.getItem('xsport_orders')) || [];
-    
-    // 2. Map and mutate the exact order
-    let updatedOrders = ordersData.map(o => 
-        o.id === orderId ? { ...o, status: newStatus } : o
-    );
-    
-    // 3. Save to LocalStorage
-    localStorage.setItem('xsport_orders', JSON.stringify(updatedOrders));
-    
-    // 4. Update the local React state to force a re-render immediately
-    setOrders(updatedOrders); 
-    
-    // 5. Fire global event for other tabs (Customer Account Page)
-    window.dispatchEvent(new Event('xsportDataUpdated'));
-    showToast('✅ Cập nhật trạng thái thành công!');
-  };
+    const handleStatusChange =
+        async (orderId,newStatus)=>{
 
-  const handleDelete = (orderId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-      const updatedOrders = orders.filter(order => order.id !== orderId);
-      setOrders(updatedOrders);
-      localStorage.setItem('xsport_orders', JSON.stringify(updatedOrders));
-      window.dispatchEvent(new Event('xsportDataUpdated'));
-      showToast('✅ Đã xóa đơn hàng thành công!');
-    }
-  };
+          try{
+
+            await orderService
+                .updateOrderStatusByAdmin(
+                    orderId,
+                    newStatus
+                );
+
+            await loadOrders();
+
+            showToast(
+                "Cập nhật thành công"
+            );
+
+          }catch(err){
+
+            console.log(err);
+          }
+
+        }
+
+  const handleDelete =
+      async(id)=>{
+
+        if(window.confirm("Bạn có chắc chắn xóa ?")){
+
+          try{
+
+            await orderService
+                .deleteOrder(id);
+
+            await loadOrders();
+
+            showToast(
+                "Xóa thành công"
+            );
+
+          }catch(err){
+
+            console.log(err);
+          }
+
+        }
+
+      }
 
   const handleView = (order) => {
     setSelectedOrder(order);

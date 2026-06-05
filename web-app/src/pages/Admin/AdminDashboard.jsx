@@ -3,23 +3,23 @@ import './AdminDashboard.css';
 
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-const revenueData = [
-  { date: "27/05", revenue: 450000 },
-  { date: "28/05", revenue: 655000 },
-  { date: "29/05", revenue: 950000 },
-  { date: "30/05", revenue: 210000 },
-  { date: "31/05", revenue: 700000 },
-  { date: "01/06", revenue: 890000 },
-  { date: "02/06", revenue: 279000 }
-];
+// const revenueData = [
+//   { date: "27/05", revenue: 450000 },
+//   { date: "28/05", revenue: 655000 },
+//   { date: "29/05", revenue: 950000 },
+//   { date: "30/05", revenue: 210000 },
+//   { date: "31/05", revenue: 700000 },
+//   { date: "01/06", revenue: 890000 },
+//   { date: "02/06", revenue: 279000 }
+// ];
 
-const getFakeRevenueTotal = () => {
-  return revenueData.reduce(
-      (sum, item) => sum + item.revenue,
-      0
-  );
-};
-const fakeOrders = 12;
+// const getFakeRevenueTotal = () => {
+//   return revenueData.reduce(
+//       (sum, item) => sum + item.revenue,
+//       0
+//   );
+// };
+// const fakeOrders = 12;
 
 // SVG Background Icons for Cards
 const MoneyBgIcon = () => (
@@ -118,11 +118,9 @@ const AdminDashboard = () => {
       prevEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
       chartTitle = 'Doanh thu Tháng này (Theo tuần)';
     }
-    let currentRevenue =
-        getFakeRevenueTotal();
+    let currentRevenue = 0;
 
-    let prevRevenue =
-        getFakeRevenueTotal() * 0.8;
+    let prevRevenue = 0;
 
     let currentOrders = 0;
     let prevOrders = 5;
@@ -166,9 +164,9 @@ const AdminDashboard = () => {
     setMetrics({
       totalRevenue: currentRevenue,
       revenueTrend: calcTrend(currentRevenue, prevRevenue),
-      newOrders:   fakeOrders + currentOrders,
+      newOrders: currentOrders,
       ordersTrend: calcTrend(currentOrders, prevOrders),
-      activeCustomers:10+ allUsers.length,
+      activeCustomers: allUsers.length,
       customersTrend: calcTrend(allUsers.length, Math.max(allUsers.length - 2, 1)), // Mock realistic user growth
       conversionRate: currentOrders > 0 ? ((currentOrders / Math.max(allUsers.length, 1)) * 100).toFixed(1) : "0.0",
       conversionTrend: calcTrend(currentOrders, prevOrders) // Estimate conversion trend matching order momentum
@@ -200,18 +198,18 @@ const AdminDashboard = () => {
       }
 
       // fake chia đều
-      revenueData.forEach(item => {
-
-        const randomIndex =
-            Math.floor(
-                Math.random() * 6
-            );
-
-        chartConfig[
-            randomIndex
-            ].total += item.revenue;
-
-      });
+      // revenueData.forEach(item => {
+      //
+      //   const randomIndex =
+      //       Math.floor(
+      //           Math.random() * 6
+      //       );
+      //
+      //   chartConfig[
+      //       randomIndex
+      //       ].total += item.revenue;
+      //
+      // });
 
       // cộng đơn thật
       allOrders.forEach(o => {
@@ -268,17 +266,17 @@ const AdminDashboard = () => {
       }
 
       // fake data trước
-      revenueData.forEach(item => {
-
-        const segment = chartConfig.find(
-            c => c.label === item.date
-        );
-
-        if (segment) {
-          segment.total = item.revenue;
-        }
-
-      });
+      // revenueData.forEach(item => {
+      //
+      //   const segment = chartConfig.find(
+      //       c => c.label === item.date
+      //   );
+      //
+      //   if (segment) {
+      //     segment.total = item.revenue;
+      //   }
+      //
+      // });
 
       // cộng dữ liệu đơn thật
       allOrders.forEach(o => {

@@ -59,7 +59,7 @@ const AdminCustomers = () => {
   return (
       <div className="admin-customers-container">
         <div className="customers-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Quản lý Thành viên</h2>
+          <h2>Quản lý khách hàng</h2>
           <button className="export-btn" onClick={() => alert('Chức năng xuất CSV sẽ được tích hợp sau.')}>
             Xuất dữ liệu (CSV)
           </button>
