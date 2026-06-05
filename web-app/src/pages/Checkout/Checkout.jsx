@@ -379,7 +379,7 @@ export default function Checkout() {
 
         <div style={{ textAlign: 'center', marginTop: '15px' }}>
           <a href={realVnpayUrl} style={{ color: '#005baa', textDecoration: 'underline' }}>
-            Hoặc bấm vào đây để thanh toán ngay
+            Hoặc bấm vào đây để chọn phương thức khác
           </a>
         </div>
 
