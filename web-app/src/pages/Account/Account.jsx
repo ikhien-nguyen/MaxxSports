@@ -340,7 +340,7 @@ export default function Account() {
                           <ShoppingBagIcon />
                           <h3>Bạn chưa có đơn hàng nào</h3>
                           <p>Hãy khám phá các sản phẩm mới nhất!</p>
-                          <Link to="/tat-ca-san-pham" className="acc-btn acc-btn--primary">Mua sắm ngay</Link>
+                          <Link to="/category" className="acc-btn acc-btn--primary">Mua sắm ngay</Link>
                         </div>
                     ) : (
                         <div className="acc-orders-list">
